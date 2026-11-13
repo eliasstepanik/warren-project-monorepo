@@ -1,0 +1,263 @@
+:root {
+  --bg: #f4f5f7;
+  --card: #ffffff;
+  --text: #1f2933;
+  --muted: #7b8794;
+  --line: #e4e7eb;
+  --accent: #2563eb;
+  --accent-dark: #1e40af;
+  --danger: #b91c1c;
+  --focus: #b45309;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: 48px 16px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.card {
+  width: 100%;
+  max-width: 520px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 28px 28px 32px;
+  box-shadow: 0 10px 25px rgba(31, 41, 51, 0.08);
+}
+
+h1 {
+  margin: 0 0 20px;
+  font-size: 1.6rem;
+  letter-spacing: -0.01em;
+}
+
+/* ---------- form ---------- */
+
+.task-form label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.task-form-row {
+  display: flex;
+  gap: 8px;
+}
+
+#task-input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  font-size: 1rem;
+  color: var(--text);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+#task-input::placeholder {
+  color: #9aa5b1;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 10px 16px;
+  background: var(--accent);
+  color: #fff;
+}
+
+button:hover {
+  background: var(--accent-dark);
+}
+
+.error {
+  margin: 8px 0 0;
+  color: var(--danger);
+  font-size: 0.85rem;
+}
+
+/* ---------- tasks ---------- */
+
+.tasks {
+  margin-top: 24px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+
+.tasks-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.counter {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.filters {
+  display: flex;
+  gap: 4px;
+}
+
+.filter {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  padding: 5px 10px;
+  font-size: 0.85rem;
+}
+
+.filter:hover {
+  background: #eef2ff;
+  color: var(--accent-dark);
+}
+
+.filter[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.task-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.task-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.task-list li:last-child {
+  border-bottom: none;
+}
+
+.task-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  padding: 4px;
+  color: inherit;
+  text-align: left;
+  border-radius: 6px;
+}
+
+.task-toggle:hover {
+  background: transparent;
+}
+
+/* CSS-drawn checkbox: no unicode glyphs, so nothing can render as a
+   "missing character" box. State comes from li.done / aria-pressed. */
+.checkbox {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--muted);
+  border-radius: 5px;
+  background: #fff;
+}
+
+.task-toggle:hover .checkbox {
+  border-color: var(--accent);
+}
+
+li.done .checkbox,
+.task-toggle[aria-pressed="true"] .checkbox {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+li.done .checkbox::after,
+.task-toggle[aria-pressed="true"] .checkbox::after {
+  content: "";
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  margin-top: -2px;
+}
+
+.task-title {
+  overflow-wrap: anywhere;
+}
+
+li.done .task-title {
+  text-decoration: line-through;
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+.delete {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid var(--line);
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  flex: none;
+}
+
+.delete:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: var(--danger);
+}
+
+.empty-state {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* ---------- focus + helpers ---------- */
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+}

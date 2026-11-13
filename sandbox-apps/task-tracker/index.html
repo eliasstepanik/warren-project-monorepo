@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Task Tracker</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main class="card">
+  <h1>Task Tracker</h1>
+
+  <form id="task-form" class="task-form" novalidate>
+    <label for="task-input">New task</label>
+    <div class="task-form-row">
+      <input
+        id="task-input"
+        name="task"
+        type="text"
+        autocomplete="off"
+        placeholder="What needs doing?"
+        aria-describedby="form-error"
+      >
+      <button id="add-button" type="submit">Add</button>
+    </div>
+    <p id="form-error" class="error" role="alert" hidden></p>
+  </form>
+
+  <section class="tasks" aria-labelledby="tasks-heading">
+    <div class="tasks-header">
+      <h2 id="tasks-heading" class="visually-hidden">Tasks</h2>
+      <p id="counter" class="counter" aria-live="polite">0 items left</p>
+      <nav class="filters" aria-label="Filter tasks">
+        <button type="button" class="filter" data-filter="all" aria-pressed="true">All</button>
+        <button type="button" class="filter" data-filter="active" aria-pressed="false">Active</button>
+        <button type="button" class="filter" data-filter="done" aria-pressed="false">Done</button>
+      </nav>
+    </div>
+
+    <ul id="task-list" class="task-list"></ul>
+    <p id="empty-state" class="empty-state" hidden>No tasks yet.</p>
+  </section>
+</main>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
