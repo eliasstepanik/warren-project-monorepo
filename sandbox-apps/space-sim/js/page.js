@@ -85,5 +85,5 @@ document.getElementById('play').addEventListener('click', (e) => {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   document.getElementById('demo').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
   game.canvas.focus({ preventScroll: true });
-  game.setFocused(true); // focus events may not fire if the window is not active
+  game.setFocused(document.activeElement === game.canvas); // focus events may not fire if the window is not active
 });
