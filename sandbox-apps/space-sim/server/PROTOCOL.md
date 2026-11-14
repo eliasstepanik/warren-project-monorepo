@@ -2,8 +2,18 @@
 
 Transport: WebSocket at `/ws` (RFC 6455), one JSON object per text message,
 at most 4096 bytes (bigger messages close the socket with code 1009). Every
-message has a string field `t` (the type). A client that sends nothing for 10 s
-is disconnected (code 1001), so send `ping` now and then.
+message has a string field `t` (the type). A client from which no frame (of
+any kind, including WebSocket pongs) arrives for 30 s is disconnected (code
+1001). The server sends a WebSocket ping every 10 s, which browsers answer by
+themselves, so a hidden tab stays connected; sending `ping` now and then is
+still useful to measure latency. A client that does not read what is sent to it
+(more than 256 KB queued) is disconnected.
+
+Limits (defaults, configurable when starting the server with the environment
+variables `MAX_CONNECTIONS`, `MAX_PER_IP` and `MAX_ROOMS`): 256 connections
+(more are refused with HTTP 503), 16 per IP address (HTTP 429, 0 = no cap) and
+64 rooms (`create` answers `{t:'error', msg:'server full'}`). Each client may
+send at most about 100 messages/s of any type; extra ones are dropped silently.
 
 Time is in seconds, distance in du, angles in radians (same units as
 `js/physics.js`). The simulation runs at 120 steps/s; snapshots are sent at
