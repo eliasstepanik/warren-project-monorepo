@@ -100,6 +100,8 @@ export function start(canvas) {
     else if (WARP_UP.has(k)) sim.changeWarp(1);
     else if (ZOOM_IN.has(k)) sim.changeZoom(1);
     else if (ZOOM_OUT.has(k)) sim.changeZoom(-1);
+    else if (k === 'f' || k === 'f11') toggleFullscreen();
+    else if (k === 'b') toggleImmersive();
     else if (k === 'r') sim.reset();
     else if (k === 'p') {
       ui.paused = !ui.paused;
