@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { Sim } from '../js/sim.js';
-import { render, W, H } from '../js/render.js';
+import { render } from '../js/render.js';
 
 // Minimal canvas stub that records fills and rejects NaN coordinates.
 function stubCtx() {
