@@ -122,7 +122,7 @@ export class MpClient {
     const ship = {
       x: mine.x, y: mine.y, vx: mine.vx, vy: mine.vy, angle: mine.a, cache: makeStepCache(),
     };
-    let t = serverTime;
+    let t = Math.round(serverTime / STEP) * STEP; // snapshots round time to 1 ms
     let hit = -1;
     for (let i = 0; i < steps && hit < 0; i++) {
       hit = stepShip(ship, t, this.inputAt(this.stepCount - steps + i));
