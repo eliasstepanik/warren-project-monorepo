@@ -274,7 +274,7 @@ test('inputs are rate limited to about 60 per second', () => {
 });
 
 test('end to end: two clients in one room get 2-ship snapshots and one fires', async () => {
-  const s = await start();
+  const s = await start({ graceMs: 0 });
   const a = await TestClient.connect(s.port);
   const b = await TestClient.connect(s.port);
   try {
