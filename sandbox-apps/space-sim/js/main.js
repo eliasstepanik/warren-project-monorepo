@@ -51,7 +51,19 @@ export function start(canvas) {
     }
     canvas.classList.remove('fluid');
     const dpr = window.devicePixelRatio || 1;
-    const scale = Math.floor((avail * dpr) / W) / dpr;
+    let scale = Math.floor((avail * dpr) / W) / dpr;
+    // A fractional dpr can round the device-pixel scale far below the space we
+    // have; fall back to the CSS-integer scale (or fluid) when it is much smaller.
+    const cssScale = Math.floor(avail / W);
+    if (W * scale < MIN_INTEGER_WIDTH || W * scale < W * cssScale) {
+      if (cssScale < 1) {
+        canvas.classList.add('fluid');
+        canvas.style.width = '';
+        canvas.style.height = '';
+        return;
+      }
+      scale = cssScale;
+    }
     canvas.style.width = `${W * scale}px`;
     canvas.style.height = `${H * scale}px`;
   }
