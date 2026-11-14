@@ -1,0 +1,59 @@
+# Lone Orbit
+
+A tiny 2D space sim with real orbital mechanics, drawn in chunky pixels, plus a
+landing page that embeds the playable demo. Plain HTML, CSS and JS with
+Canvas. There is no build step and no external dependency.
+
+## Run it
+
+The code uses ES modules, so it must be served over HTTP. Opening
+`index.html` from `file://` will not work.
+
+```sh
+cd sandbox-apps/space-sim
+python3 -m http.server 8000
+# open http://localhost:8000/
+```
+
+## Controls
+
+Keys only work while the game canvas is focused. Click it, or press the Play
+button.
+
+| Key | Action |
+| --- | --- |
+| `A` `D` / `←` `→` | Rotate |
+| `W` / `↑` | Thrust |
+| `S` / `↓` | Retro thrust |
+| `,` `.` / `Q` `E` | Time warp down / up (1x to 64x) |
+| `+` `-` / mouse wheel | Zoom |
+| `R` | Reset |
+
+Engines are disabled while time warp is above 1x. The game pauses while the
+tab is hidden.
+
+## How it works
+
+- `js/physics.js`: Kepler orbits for the star, four planets and one moon
+  (bodies move on rails). The ship is a test particle pulled by every body.
+  Velocity Verlet integrator, fixed 1/120 s step, and trajectory prediction
+  that looks up the bodies' future positions.
+- `js/sim.js`: game state. Warp N runs N times as many fixed steps per frame,
+  capped at 512 per frame. The step size never changes, so accuracy does not
+  drop at high warp.
+- `js/render.js`: draws to a 320x180 canvas. `js/font.js` is a 3x5 bitmap font
+  and `js/palette.js` is the 16-colour palette.
+- `js/main.js`: input, integer scaling and the game loop. `js/page.js` drives
+  the landing page.
+
+The ship starts in a circular orbit around TIDE. Other bodies perturb it, so
+over a very long time the orbit drifts.
+
+## Tests
+
+Needs Node 22 or newer. There are no packages to install.
+
+```sh
+node --check js/*.js   # syntax check
+node --test            # physics and render sanity tests
+```
