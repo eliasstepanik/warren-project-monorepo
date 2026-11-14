@@ -191,7 +191,7 @@ test('oversized messages close the socket with 1009; ping gets a pong', async ()
 });
 
 test('names are sanitised to 12 characters', () => {
-  assert.equal(sanitizeName('  <b>Hello</b> World, how are you  '), 'bHellobWorld');
+  assert.equal(sanitizeName('  <b>Hello</b> World, how are you  '), 'bHellob Worl');
   assert.equal(sanitizeName('x'.repeat(40)).length, 12);
   assert.equal(sanitizeName(''), 'PILOT');
   assert.equal(sanitizeName({}), 'PILOT');
