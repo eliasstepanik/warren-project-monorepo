@@ -27,5 +27,5 @@ test('render runs at every zoom, before and after a crash', () => {
   sim.explode(2);
   sim.update(1 / 60, { turn: 0, thrust: 0 });
   render(ctx, sim, { focused: false, paused: false });
-  assert.ok(ctx.calls.fills > W * 0 + H * 0 + 100);
+  assert.ok(ctx.calls.fills > 100);
 });
