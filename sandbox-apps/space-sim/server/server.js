@@ -115,7 +115,21 @@ export class Room {
 
   stop() {
     clearInterval(this.timer);
+    this.timer = null;
   }
+}
+
+/**
+ * Token bucket `name` of `client`: `rate` tokens per second, burst of `rate`.
+ * Returns false (drop the message) when it is empty.
+ */
+export function allow(client, name, rate, now = performance.now()) {
+  const b = (client.buckets ??= {})[name] ??= { tokens: rate, at: now };
+  b.tokens = Math.min(rate, b.tokens + ((now - b.at) / 1000) * rate);
+  b.at = now;
+  if (b.tokens < 1) return false;
+  b.tokens--;
+  return true;
 }
 
 /**
