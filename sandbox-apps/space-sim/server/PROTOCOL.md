@@ -101,4 +101,5 @@ gravity and cannot hit their owner during the first 0.3 s. A dead ship respawns
 after 3 s in a circular orbit around a random planet, away from other ships,
 and is invulnerable for 2 s. A room whose last player left stops simulating
 and is deleted 10 s later, unless someone joins it first (so a page reload can
-rejoin its room).
+rejoin its room). Such a room still counts toward the 64-room cap, but is
+deleted early (oldest first) when a `create` would otherwise fail.
