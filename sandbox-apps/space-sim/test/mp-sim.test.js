@@ -180,13 +180,18 @@ test('crashing into a body kills the ship without a kill credit', () => {
 test('dead ships respawn after the delay, invulnerable, in a safe orbit', () => {
   const { sim, b } = pair();
   sim.setInput(1, { fire: 1 });
-  run(sim, steps(0.6));
+  let n = 0;
+  while (b.alive) {
+    sim.step();
+    n++;
+    assert.ok(n < steps(1), 'the shot should have landed');
+  }
   sim.setInput(1, { fire: 0 });
-  assert.equal(b.alive, false);
-  const events = run(sim, steps(RESPAWN_DELAY) - steps(0.6) - 2);
+  sim.projectiles.length = 0;
+  const events = run(sim, steps(RESPAWN_DELAY) - 3);
   assert.equal(b.alive, false, 'still dead before the delay');
   assert.equal(events.some((e) => e.type === 'respawn'), false);
-  const later = run(sim, 40);
+  const later = run(sim, 6);
   assert.deepEqual(later.find((e) => e.type === 'respawn'), { type: 'respawn', id: 2 });
   assert.equal(b.alive, true);
   assert.ok(Math.abs(b.invuln * STEP - INVULN_TIME) < 0.05);
