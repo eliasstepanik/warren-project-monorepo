@@ -127,7 +127,7 @@ export class MpSim {
 
   kill(ship, events, event) {
     ship.alive = false;
-    ship.respawn = RESPAWN_TICKS;
+    ship.respawn = RESPAWN_TICKS + 1; // the death step itself also counts down once
     ship.invuln = 0;
     ship.deaths++;
     events.push(event);
