@@ -117,7 +117,9 @@ export class WsConnection extends EventEmitter {
     socket.setNoDelay(true);
     socket.on('data', (chunk) => this.onData(chunk));
     socket.on('error', () => socket.destroy());
-    socket.on('end', () => this.terminate());
+    // After our close frame the destroy timer in close() is already running:
+    // destroying now could drop the close echo that is still queued.
+    socket.on('end', () => (this.closeSent ? socket.end() : this.terminate()));
     socket.on('close', () => {
       if (this.closed) return;
       this.closed = true;
