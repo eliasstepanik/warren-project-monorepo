@@ -31,6 +31,35 @@
       <noscript><p class="note">This demo needs JavaScript.</p></noscript>
     </section>
 
+    <section id="mp" class="section" aria-labelledby="mp-h">
+      <h2 id="mp-h">MULTIPLAYER</h2>
+      <div class="panel lobby">
+        <p class="note first">Up to 4 pilots, orbital combat. Needs the Node server: <code>npm start</code>.</p>
+        <div class="row">
+          <label for="mp-name">NAME</label>
+          <input id="mp-name" class="field" type="text" maxlength="12" autocomplete="nickname" spellcheck="false" placeholder="PILOT">
+          <button id="mp-create" class="btn small" type="button">CREATE ROOM</button>
+        </div>
+        <div class="row">
+          <label for="mp-code">ROOM</label>
+          <input id="mp-code" class="field code" type="text" maxlength="4" autocomplete="off" spellcheck="false" placeholder="ABCD">
+          <button id="mp-join" class="btn small" type="button">JOIN</button>
+        </div>
+        <p id="mp-status" class="status" role="status" aria-live="polite">Not connected.</p>
+        <div id="mp-room" hidden>
+          <ul id="mp-players" class="players" aria-label="Players"></ul>
+          <div class="row">
+            <label for="mp-share">LINK</label>
+            <input id="mp-share" class="field wide" type="text" readonly>
+            <button id="mp-copy" class="btn small" type="button">COPY</button>
+          </div>
+        </div>
+        <div class="row">
+          <button id="mp-leave" class="btn small" type="button" hidden>LEAVE / BACK TO SINGLEPLAYER</button>
+        </div>
+      </div>
+    </section>
+
     <section class="section" aria-labelledby="feat-h">
       <h2 id="feat-h">FEATURES</h2>
       <ul class="cards">
