@@ -36,7 +36,10 @@ with `positionsAt(snap.time)` from `js/physics.js`.
   the client can drop the inputs it has already seen applied. Out-of-range
   values are clamped. The input stays in effect until the next one. At most
   about 60 inputs/s are accepted; extra ones are dropped silently.
-- `create`/`join` are only valid once per connection.
+- `create`/`join` are only valid while the connection is not in a room (a
+  second one answers `already in a room`). A failed `join` (bad code, unknown
+  room, full room) may be retried, but the 5th failed `join` on one connection
+  closes it with code 1008, so room codes cannot be guessed by brute force.
 
 ## Server to client
 
