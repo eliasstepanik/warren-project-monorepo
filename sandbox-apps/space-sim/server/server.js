@@ -273,11 +273,10 @@ export function createGameServer({ root = ROOT, idleMs = IDLE_MS, loop = true } 
         send: (obj) => conn.send(JSON.stringify(obj)),
         sendText: (text) => conn.send(text),
       };
-      clients.add({ client, conn });
-      const entry = [...clients].find((e) => e.client === client);
+      clients.add(conn);
       conn.on('message', (text) => lobby.handle(client, text));
       conn.on('close', () => {
-        clients.delete(entry);
+        clients.delete(conn);
         lobby.leave(client);
       });
     } catch {
