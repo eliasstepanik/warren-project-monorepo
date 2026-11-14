@@ -114,7 +114,9 @@ export class WsConnection extends EventEmitter {
       this.closed = true;
       this.emit('close');
     });
-    if (head.length) this.onData(Buffer.alloc(0));
+    // Bytes that arrived with the upgrade request: process them once the
+    // caller has attached its 'message' listener.
+    if (head.length) process.nextTick(() => this.onData(Buffer.alloc(0)));
   }
 
   get open() {
