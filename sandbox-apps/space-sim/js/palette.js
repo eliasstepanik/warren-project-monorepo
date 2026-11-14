@@ -17,3 +17,6 @@ export const PAL = {
   pink: '#ff77a8',
   peach: '#ffccaa',
 };
+
+// Ship colour by multiplayer ship id (0-3).
+export const SHIP_COLORS = ['red', 'green', 'blue', 'yellow'];

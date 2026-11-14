@@ -7,13 +7,13 @@ import { BODIES, STAR, orbitRel } from './physics.js';
 export const W = 320;
 export const H = 180;
 
-const SHIP_SHAPE = [ // pixels in ship space, +x = nose
+export const SHIP_SHAPE = [ // pixels in ship space, +x = nose
   [3, 0], [2, 0], [1, 0], [0, 0], [-1, 0],
   [1, -1], [0, -1], [-1, -1], [-2, -2],
   [1, 1], [0, 1], [-1, 1], [-2, 2],
 ];
 
-function px(ctx, x, y, color) {
+export function px(ctx, x, y, color) {
   ctx.fillStyle = PAL[color];
   ctx.fillRect(Math.round(x), Math.round(y), 1, 1);
 }
@@ -25,7 +25,7 @@ function hash(x, y) {
 }
 
 /** Parallax starfield tiled over a 64x64 cell grid, deterministic by cell. */
-function drawStars(ctx, cam) {
+export function drawStars(ctx, cam) {
   const layers = [
     { f: 0.02, color: 'darkGrey', cell: 32 },
     { f: 0.05, color: 'lavender', cell: 48 },
@@ -48,11 +48,11 @@ function drawStars(ctx, cam) {
   }
 }
 
-function toScreen(cam, x, y) {
+export function toScreen(cam, x, y) {
   return [W / 2 + (x - cam.x) * cam.zoom, H / 2 + (y - cam.y) * cam.zoom];
 }
 
-function drawOrbitPaths(ctx, sim, cam) {
+export function drawOrbitPaths(ctx, sim, cam) {
   const rel = { x: 0, y: 0 };
   for (let i = 1; i < BODIES.length; i++) {
     const par = sim.pos[BODIES[i].parent];
@@ -65,7 +65,7 @@ function drawOrbitPaths(ctx, sim, cam) {
   }
 }
 
-function drawBody(ctx, sim, cam, i) {
+export function drawBody(ctx, sim, cam, i) {
   const b = BODIES[i];
   const [cx, cy] = toScreen(cam, sim.pos[i].x, sim.pos[i].y);
   const r = Math.max(1.5, b.radius * cam.zoom);
@@ -155,7 +155,7 @@ function dotLine(ctx, x0, y0, x1, y1, dash) {
   }
 }
 
-function drawPrediction(ctx, sim, cam) {
+export function drawPrediction(ctx, sim, cam) {
   const p = sim.prediction;
   if (!p) return;
   // The path is relative to the reference body; it may be a few frames old, so
@@ -196,7 +196,7 @@ function drawParticles(ctx, sim, cam) {
   }
 }
 
-function panel(ctx, x, y, w, h) {
+export function panel(ctx, x, y, w, h) {
   ctx.fillStyle = PAL.night;
   ctx.fillRect(x, y, w, h);
   ctx.fillStyle = PAL.lavender;
