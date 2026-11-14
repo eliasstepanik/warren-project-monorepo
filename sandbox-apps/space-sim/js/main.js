@@ -1,6 +1,8 @@
 // Browser glue: canvas scaling, keyboard input (only while focused), game loop.
 import { Sim } from './sim.js';
 import { render, W, H } from './render.js';
+import { PAL } from './palette.js';
+import { drawText, textWidth } from './font.js';
 
 // Movement keys are matched on e.code (physical position, so WASD works on any
 // layout). Zoom, warp, reset and pause are matched on e.key (the typed
