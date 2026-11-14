@@ -1,7 +1,8 @@
 // Browser glue: canvas scaling, keyboard input (only while focused), game loop.
 import { Sim } from './sim.js';
 import { render, W, H } from './render.js';
-import { renderMp, createMpView, changeMpZoom, addExplosion } from './render-mp.js';
+import { PAL } from './palette.js';
+import { drawText, textWidth } from './font.js';
 
 // Movement keys are matched on e.code (physical position, so WASD works on any
 // layout). Zoom, warp, reset and pause are matched on e.key (the typed
@@ -13,9 +14,9 @@ const WARP_DOWN = new Set([',', '<', 'q']);
 const WARP_UP = new Set(['.', '>', 'e']);
 const ZOOM_IN = new Set(['+', '=']);
 const ZOOM_OUT = new Set(['-', '_']);
-const NEUTRAL = Object.freeze({ rot: 0, thrust: 0, retro: 0, fire: 0 });
-const FLASH_MS = 1500;
-const ACTION_KEYS = new Set([...WARP_DOWN, ...WARP_UP, ...ZOOM_IN, ...ZOOM_OUT, 'r', 'p']);
+const ACTION_KEYS = new Set([...WARP_DOWN, ...WARP_UP, ...ZOOM_IN, ...ZOOM_OUT, 'r', 'p', 'f', 'f11', 'b']);
+
+const TOAST_MS = 1000;
 
 const WHEEL_THRESHOLD = 100; // accumulated deltaY per zoom level
 const MIN_INTEGER_WIDTH = 320; // below this, fall back to fluid scaling
@@ -46,7 +47,13 @@ export function start(canvas) {
     const ps = getComputedStyle(parent);
     const cs = getComputedStyle(canvas);
     const inner = parent.clientWidth - parseFloat(ps.paddingLeft) - parseFloat(ps.paddingRight);
-    const avail = inner - parseFloat(cs.borderLeftWidth) - parseFloat(cs.borderRightWidth);
+    let avail = inner - parseFloat(cs.borderLeftWidth) - parseFloat(cs.borderRightWidth);
+    if (document.body.classList.contains('immersive')) {
+      // The viewport has a fixed height, so the width alone may be too generous.
+      const innerH = parent.clientHeight - parseFloat(ps.paddingTop) - parseFloat(ps.paddingBottom);
+      const availH = innerH - parseFloat(cs.borderTopWidth) - parseFloat(cs.borderBottomWidth);
+      avail = Math.min(avail, (availH * W) / H);
+    }
     if (!(avail >= MIN_INTEGER_WIDTH)) {
       canvas.classList.add('fluid');
       canvas.style.width = '';
@@ -88,6 +95,56 @@ export function start(canvas) {
   canvas.addEventListener('blur', () => setFocused(false));
   canvas.addEventListener('mousedown', () => canvas.focus());
 
+  // Display modes: browser fullscreen (F / F11) and immersive (B), where the
+  // game fills the whole viewport. A short message confirms each change.
+  function showToast(text) {
+    ui.toast = { text, until: performance.now() + TOAST_MS };
+  }
+  function modeToast() {
+    showToast(document.fullscreenElement ? 'FULLSCREEN'
+      : document.body.classList.contains('immersive') ? 'IMMERSIVE' : 'NORMAL');
+  }
+  // Leaving immersive collapses the fixed layout, so remember where the page was.
+  let savedScroll = 0;
+  // True when fullscreen (not the B key) turned immersive on, so leaving
+  // fullscreen turns it off again.
+  let immersiveFromFullscreen = false;
+  function setImmersive(on) {
+    if (on === document.body.classList.contains('immersive')) return;
+    if (on) savedScroll = window.scrollY;
+    document.body.classList.toggle('immersive', on);
+    resize();
+    if (!on) window.scrollTo(0, savedScroll);
+  }
+  function toggleFullscreen() {
+    if (!document.fullscreenEnabled) {
+      showToast('NO FULLSCREEN');
+      return;
+    }
+    const p = document.fullscreenElement
+      ? document.exitFullscreen()
+      : document.documentElement.requestFullscreen();
+    // refused by the browser: stay as we are
+    if (p) p.catch(() => showToast('NO FULLSCREEN'));
+  }
+  function toggleImmersive() {
+    immersiveFromFullscreen = false; // an explicit choice now
+    setImmersive(!document.body.classList.contains('immersive'));
+    modeToast();
+  }
+  // Also fires when the user leaves fullscreen with Esc.
+  document.addEventListener('fullscreenchange', () => {
+    if (document.fullscreenElement) {
+      immersiveFromFullscreen = !document.body.classList.contains('immersive');
+      setImmersive(true);
+    } else {
+      if (immersiveFromFullscreen) setImmersive(false);
+      immersiveFromFullscreen = false;
+    }
+    resize();
+    modeToast();
+  });
+
   canvas.addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const k = e.key.toLowerCase();
@@ -103,6 +160,8 @@ export function start(canvas) {
     else if (WARP_UP.has(k)) sim.changeWarp(1);
     else if (ZOOM_IN.has(k)) sim.changeZoom(1);
     else if (ZOOM_OUT.has(k)) sim.changeZoom(-1);
+    else if (k === 'f' || k === 'f11') toggleFullscreen();
+    else if (k === 'b') toggleImmersive();
     else if (k === 'r') sim.reset();
     else if (k === 'p') {
       ui.paused = !ui.paused;
@@ -186,6 +245,19 @@ export function start(canvas) {
       });
     }
     render(ctx, sim, ui);
+    drawToast(now);
+  }
+
+  /** Mode message, centred near the top; fades out over its last half second. */
+  function drawToast(now) {
+    const t = ui.toast;
+    if (!t || now >= t.until) return;
+    ctx.globalAlpha = Math.min(1, (t.until - now) / (TOAST_MS / 2));
+    const x = Math.round((W - textWidth(t.text, 2)) / 2);
+    ctx.fillStyle = PAL.night;
+    ctx.fillRect(x - 4, 20, textWidth(t.text, 2) + 8, 16);
+    drawText(ctx, t.text, x, 24, PAL.yellow, 2);
+    ctx.globalAlpha = 1;
   }
 
   // Run the loop only while the canvas is on screen and the tab is visible;

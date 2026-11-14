@@ -7,8 +7,8 @@ import {
 } from './physics.js';
 
 export const WARPS = [1, 2, 4, 8, 16, 32, 64];
-export const ZOOMS = [0.125, 0.18, 0.25, 0.35, 0.5, 0.7, 1, 1.4, 2, 3];
-export const START_ZOOM = 6; // index into ZOOMS (1x)
+export const ZOOMS = [0.05, 0.08, 0.125, 0.18, 0.25, 0.35, 0.5, 0.7, 1, 1.4, 2, 3, 4, 6, 8];
+export const START_ZOOM = 8; // index into ZOOMS (1x)
 const START_RADIUS = 22;
 const MAX_STEPS_PER_UPDATE = 512;
 const PREDICT_EVERY = 4; // frames between prediction refreshes while coasting

@@ -36,6 +36,8 @@ button.
 | `,` `.` / `Q` `E` | Time warp down / up (1x to 64x) |
 | `+` `-` / mouse wheel | Zoom |
 | `P` | Pause / resume |
+| `F` / `F11` | Toggle browser fullscreen |
+| `B` | Toggle immersive mode (game fills the whole page) |
 | `R` | Reset |
 | `Space` / `F` | Fire (multiplayer only) |
 | `Tab` (hold) | Scoreboard (multiplayer only) |
