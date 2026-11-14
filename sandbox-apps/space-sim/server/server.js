@@ -296,6 +296,14 @@ function serveStatic(root, req, res) {
   return undefined;
 }
 
+/** Non-negative number from the environment variable `name`; `fallback` if unset or invalid. */
+export function envNumber(name, fallback, env = process.env) {
+  const raw = env[name];
+  if (raw === undefined || String(raw).trim() === '') return fallback;
+  const n = Number(raw);
+  return Number.isFinite(n) && n >= 0 ? n : fallback;
+}
+
 /**
  * Build (but do not start) the server. Returns { server, lobby, close }.
  * Options: root, idleMs, loop (false disables room timers, for tests),
