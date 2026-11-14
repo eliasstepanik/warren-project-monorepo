@@ -28,6 +28,8 @@ button.
 | `,` `.` / `Q` `E` | Time warp down / up (1x to 64x) |
 | `+` `-` / mouse wheel | Zoom |
 | `P` | Pause / resume |
+| `F` / `F11` | Toggle browser fullscreen |
+| `B` | Toggle immersive mode (game fills the whole page) |
 | `R` | Reset |
 
 Engines are disabled while time warp is above 1x. The game pauses while the
