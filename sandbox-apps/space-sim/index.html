@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lone Orbit — a tiny pixel-art orbit sim</title>
+  <meta name="description" content="Lone Orbit is a tiny 2D space sim with real orbital mechanics, drawn in chunky pixels. Play it in your browser.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="bg" aria-hidden="true"></canvas>
+
+  <header class="hero">
+    <p class="tag">A TINY ORBIT SIM</p>
+    <h1>
+      <canvas id="title-art" aria-hidden="true"></canvas>
+      <span class="sr-only">Lone Orbit</span>
+    </h1>
+    <p class="lead">One ship. One star. Every burn bends your orbit, and gravity never forgets.</p>
+    <a id="play" class="btn" href="#demo">&#9654; PLAY</a>
+  </header>
+
+  <main>
+    <section id="demo" class="section" aria-labelledby="demo-h">
+      <h2 id="demo-h">THE DEMO</h2>
+      <div class="screen">
+        <canvas id="game" aria-label="Lone Orbit game. Click to focus, then use W A S D or the arrow keys to fly."></canvas>
+      </div>
+      <p class="note">Click the screen to focus it. Keys only work while it is focused. Press R to reset.</p>
+      <noscript><p class="note">This demo needs JavaScript.</p></noscript>
+    </section>
+
+    <section class="section" aria-labelledby="feat-h">
+      <h2 id="feat-h">FEATURES</h2>
+      <ul class="cards">
+        <li class="card">
+          <h3>REAL GRAVITY</h3>
+          <p>Your ship feels the pull of the star, every planet and the moon, all at once.</p>
+        </li>
+        <li class="card">
+          <h3>PLANETS ON RAILS</h3>
+          <p>Four worlds and a moon follow true elliptical Kepler orbits.</p>
+        </li>
+        <li class="card">
+          <h3>SEE THE FUTURE</h3>
+          <p>A dotted line predicts your path, including where the planets will be.</p>
+        </li>
+        <li class="card">
+          <h3>TIME WARP</h3>
+          <p>Skip ahead up to 64x. The physics stays stable at every speed.</p>
+        </li>
+      </ul>
+    </section>
+
+    <section class="section" aria-labelledby="ctl-h">
+      <h2 id="ctl-h">CONTROLS</h2>
+      <table class="keys">
+        <tbody>
+          <tr><th scope="row"><kbd>A</kbd> <kbd>D</kbd> / <kbd>&larr;</kbd> <kbd>&rarr;</kbd></th><td>Rotate</td></tr>
+          <tr><th scope="row"><kbd>W</kbd> / <kbd>&uarr;</kbd></th><td>Thrust forward</td></tr>
+          <tr><th scope="row"><kbd>S</kbd> / <kbd>&darr;</kbd></th><td>Retro thrust</td></tr>
+          <tr><th scope="row"><kbd>,</kbd> <kbd>.</kbd> / <kbd>Q</kbd> <kbd>E</kbd></th><td>Slower / faster time warp (engines off while warping)</td></tr>
+          <tr><th scope="row"><kbd>+</kbd> <kbd>-</kbd> / wheel</th><td>Zoom</td></tr>
+          <tr><th scope="row"><kbd>R</kbd></th><td>Reset</td></tr>
+        </tbody>
+      </table>
+      <p class="note">Tip: burn along your heading to raise the far side of your orbit. Burn against it to lower it.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>LONE ORBIT &middot; plain HTML, CSS and JS &middot; no dependencies</p>
+  </footer>
+
+  <script type="module" src="js/page.js"></script>
+</body>
+</html>
