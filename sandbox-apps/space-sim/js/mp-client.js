@@ -67,7 +67,20 @@ export class MpClient {
 
   onPlayers(list) {
     const l = Array.isArray(list) ? list : list?.list ?? [];
-    this.players = new Map(l.map((p) => [p.id, p]));
+    const next = new Map(l.map((p) => [p.id, p]));
+    // Ship ids are reused: a new, changed or departed player under an id must not
+    // be interpolated with the old ship's snapshots.
+    for (const id of new Set([...this.players.keys(), ...next.keys()])) {
+      if (this.players.get(id)?.name !== next.get(id)?.name) this.forget(id);
+    }
+    this.players = next;
+  }
+
+  /** Drop ship `id` from the snapshot history. */
+  forget(id) {
+    this.snaps = this.snaps.map((e) => (e.snap.ships.some((s) => s.id === id)
+      ? { ...e, snap: { ...e.snap, ships: e.snap.ships.filter((s) => s.id !== id) } }
+      : e));
   }
 
   // --- snapshots, prediction ------------------------------------------------
