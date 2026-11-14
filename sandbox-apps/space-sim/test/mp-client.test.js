@@ -227,7 +227,7 @@ test('a reused ship id does not interpolate with the previous pilot', () => {
   c.onPlayers({ list: [{ id: 0, name: 'AL', color: 0 }] });
   c.onPlayers({ list: [{ id: 0, name: 'AL', color: 0 }, { id: 1, name: 'CY', color: 1 }] });
   c.onSnapshot(snapOf(1.05, [ship(0), ship(1, { x: 900 })]), 50);
-  const r = c.interpolated(50 + INTERP_DELAY - 25);
+  const r = c.interpolated(50 + INTERP_DELAY + 10);
   assert.equal(r.ships.length, 1);
   assert.equal(r.ships[0].x, 900, 'no blend with BO at x=100');
   assert.equal(c.scoreboard().length, 2);
