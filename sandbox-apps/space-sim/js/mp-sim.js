@@ -105,7 +105,7 @@ export class MpSim {
     for (let k = 0; k < SPAWN_TRIES; k++) {
       const body = PLANETS[Math.floor(this.rng() * PLANETS.length) % PLANETS.length];
       const phase = this.rng() * Math.PI * 2;
-      const s = circularOrbit(body, BODIES[body].radius + SPAWN_ALTITUDE, this.t, phase);
+      const s = circularOrbit(body, BODIES[body].radius + SPAWN_ALTITUDE, this.time, phase);
       let clear = Infinity;
       for (const o of this.ships.values()) {
         if (o !== ship && o.alive) clear = Math.min(clear, Math.hypot(o.x - s.x, o.y - s.y));
