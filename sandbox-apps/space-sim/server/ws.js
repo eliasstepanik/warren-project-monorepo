@@ -132,14 +132,23 @@ export class WsConnection extends EventEmitter {
     return !this.closed && !this.closeSent;
   }
 
-  send(text) {
-    if (!this.open) return false;
-    this.socket.write(encodeFrame(OP.TEXT, text));
+  /** Write a frame unless the peer is not reading: then drop it (terminate). */
+  write(frame) {
+    if (this.socket.writableLength > this.maxBuffered) {
+      this.terminate();
+      return false;
+    }
+    this.socket.write(frame);
     return true;
   }
 
+  send(text) {
+    if (!this.open) return false;
+    return this.write(encodeFrame(OP.TEXT, text));
+  }
+
   ping(payload = '') {
-    if (this.open) this.socket.write(encodeFrame(OP.PING, payload));
+    if (this.open) this.write(encodeFrame(OP.PING, payload));
   }
 
   /** Send a close frame, then end the socket (destroyed after 1 s at the latest). */
