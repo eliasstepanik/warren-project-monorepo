@@ -117,6 +117,7 @@ export class WsConnection extends EventEmitter {
     socket.setNoDelay(true);
     socket.on('data', (chunk) => this.onData(chunk));
     socket.on('error', () => socket.destroy());
+    socket.on('end', () => this.terminate());
     socket.on('close', () => {
       if (this.closed) return;
       this.closed = true;
