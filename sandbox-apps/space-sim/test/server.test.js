@@ -143,7 +143,7 @@ test('WebSocket handshake answers 101 with the correct accept key', async () => 
   }
 });
 
-test('upgrade is refused on other paths and when headers are wrong', async () => {
+test('upgrade is refused on other paths', async () => {
   const s = await start();
   try {
     const c = await TestClient.connect(s.port, '/other');
