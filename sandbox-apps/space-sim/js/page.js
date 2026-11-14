@@ -2,6 +2,7 @@
 import { PAL } from './palette.js';
 import { drawText, textWidth } from './font.js';
 import { start } from './main.js';
+import { initLobby } from './lobby.js';
 
 function seeded(seed) {
   let s = seed >>> 0;
