@@ -18,14 +18,14 @@
       <span class="sr-only">Lone Orbit</span>
     </h1>
     <p class="lead">One ship. One star. Every burn bends your orbit, and gravity never forgets.</p>
-    <a id="play" class="btn" href="#demo">&#9654; PLAY</a>
+    <a id="play" class="btn" href="#demo"><span class="play-icon" aria-hidden="true"></span>PLAY</a>
   </header>
 
   <main>
     <section id="demo" class="section" aria-labelledby="demo-h">
       <h2 id="demo-h">THE DEMO</h2>
       <div class="screen">
-        <canvas id="game" aria-label="Lone Orbit game. Click to focus, then use W A S D or the arrow keys to fly."></canvas>
+        <canvas id="game" role="application" aria-label="Lone Orbit game. Click to focus, then use W A S D or the arrow keys to fly." aria-describedby="ctl-desc"></canvas>
       </div>
       <p class="note">Click the screen to focus it. Keys only work while it is focused. Press R to reset.</p>
       <noscript><p class="note">This demo needs JavaScript.</p></noscript>
@@ -40,7 +40,7 @@
         </li>
         <li class="card">
           <h3>PLANETS ON RAILS</h3>
-          <p>Four worlds and a moon follow true elliptical Kepler orbits.</p>
+          <p>Three planets and a moon follow true elliptical Kepler orbits.</p>
         </li>
         <li class="card">
           <h3>SEE THE FUTURE</h3>
@@ -55,6 +55,7 @@
 
     <section class="section" aria-labelledby="ctl-h">
       <h2 id="ctl-h">CONTROLS</h2>
+      <p id="ctl-desc" class="note">Keys only work while the game screen is focused. A keyboard is needed: the demo has no touch controls. W A S D or the arrow keys fly, comma and period change time warp, plus and minus zoom, P pauses, R resets.</p>
       <table class="keys">
         <tbody>
           <tr><th scope="row"><kbd>A</kbd> <kbd>D</kbd> / <kbd>&larr;</kbd> <kbd>&rarr;</kbd></th><td>Rotate</td></tr>
@@ -62,6 +63,7 @@
           <tr><th scope="row"><kbd>S</kbd> / <kbd>&darr;</kbd></th><td>Retro thrust</td></tr>
           <tr><th scope="row"><kbd>,</kbd> <kbd>.</kbd> / <kbd>Q</kbd> <kbd>E</kbd></th><td>Slower / faster time warp (engines off while warping)</td></tr>
           <tr><th scope="row"><kbd>+</kbd> <kbd>-</kbd> / wheel</th><td>Zoom</td></tr>
+          <tr><th scope="row"><kbd>P</kbd></th><td>Pause / resume</td></tr>
           <tr><th scope="row"><kbd>R</kbd></th><td>Reset</td></tr>
         </tbody>
       </table>

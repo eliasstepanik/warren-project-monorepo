@@ -27,14 +27,16 @@ button.
 | `S` / `↓` | Retro thrust |
 | `,` `.` / `Q` `E` | Time warp down / up (1x to 64x) |
 | `+` `-` / mouse wheel | Zoom |
+| `P` | Pause / resume |
 | `R` | Reset |
 
 Engines are disabled while time warp is above 1x. The game pauses while the
-tab is hidden.
+tab is hidden or the canvas is scrolled off-screen. A keyboard is required;
+there are no touch controls.
 
 ## How it works
 
-- `js/physics.js`: Kepler orbits for the star, four planets and one moon
+- `js/physics.js`: Kepler orbits for the star, three planets and one moon
   (bodies move on rails). The ship is a test particle pulled by every body.
   Velocity Verlet integrator, fixed 1/120 s step, and trajectory prediction
   that looks up the bodies' future positions.
@@ -54,6 +56,6 @@ over a very long time the orbit drifts.
 Needs Node 22 or newer. There are no packages to install.
 
 ```sh
-node --check js/*.js   # syntax check
+for f in js/*.js test/*.js; do node --check "$f" || exit 1; done   # syntax check
 node --test            # physics and render sanity tests
 ```

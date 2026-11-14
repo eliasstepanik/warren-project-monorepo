@@ -2,10 +2,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   BODIES, HOME, STEP, positionsAt, stepState, circularOrbit, predict, solveKepler, bodyVelocity,
+  segmentCollision,
 } from '../js/physics.js';
 import { Sim } from '../js/sim.js';
 
-/** Ship position/velocity relative to body i at time t. */
+/** Distance between the ship and body i at time t. */
 function relative(ship, i, t) {
   const p = positionsAt(t)[i];
   return Math.hypot(ship.x - p.x, ship.y - p.y);
@@ -99,14 +100,72 @@ test('flying into a planet crashes; reset restores a live ship', () => {
   assert.equal(sim.t, 0);
 });
 
+/** Ship speed relative to HOME, whose own velocity must not count. */
+function homeSpeed(sim) {
+  const bv = bodyVelocity(HOME, sim.t);
+  return Math.hypot(sim.ship.vx - bv.x, sim.ship.vy - bv.y);
+}
+
 test('thrust accelerates along heading; retro decelerates', () => {
   const sim = new Sim();
   const a0 = sim.ship.angle;
-  const v0 = Math.hypot(sim.ship.vx, sim.ship.vy);
+  const v0 = homeSpeed(sim);
   for (let f = 0; f < 30; f++) sim.update(1 / 60, { turn: 0, thrust: 1 });
   assert.equal(sim.ship.angle, a0);
-  assert.ok(Math.hypot(sim.ship.vx, sim.ship.vy) > v0);
+  assert.ok(homeSpeed(sim) > v0);
   const sim2 = new Sim();
   for (let f = 0; f < 30; f++) sim2.update(1 / 60, { turn: 0, thrust: -1 });
-  assert.ok(Math.hypot(sim2.ship.vx, sim2.ship.vy) < v0);
+  assert.ok(homeSpeed(sim2) < v0);
+});
+
+test('segmentCollision catches a fast pass through a small body', () => {
+  const pos = positionsAt(0);
+  const mote = BODIES.findIndex((b) => b.name === 'MOTE');
+  const { x, y } = pos[mote];
+  // Both endpoints are outside MOTE (r=3) but the segment crosses it.
+  assert.equal(segmentCollision(x - 20, y, x + 20, y, pos), mote);
+  assert.equal(segmentCollision(x - 20, y + 10, x + 20, y + 10, pos), -1);
+});
+
+test('prediction detects a collision with MOTE that endpoint checks would miss', () => {
+  const t = 0;
+  const pos = positionsAt(t);
+  const mote = BODIES.findIndex((b) => b.name === 'MOTE');
+  const bv = bodyVelocity(mote, t);
+  // Fly through MOTE's centre at 400 du/s relative to it: 8 du per 0.02 s step.
+  const ship = { x: pos[mote].x - 40, y: pos[mote].y, vx: bv.x + 400, vy: bv.y };
+  const p = predict(ship, t, 20, 0.02, 0.02);
+  assert.equal(p.hit, mote);
+});
+
+test('crash freezes the HUD telemetry at ALT 0 / SPD 0 on the body hit', () => {
+  const sim = new Sim();
+  sim.explode(HOME);
+  sim.update(1 / 60, { turn: 0, thrust: 0 });
+  const tel = sim.telemetry();
+  assert.equal(tel.body, HOME);
+  assert.equal(tel.altitude, 0);
+  assert.equal(tel.speed, 0);
+});
+
+test('prediction is throttled while coasting but refreshed on warp change', () => {
+  const sim = new Sim();
+  const first = sim.prediction;
+  sim.update(1 / 60, { turn: 0, thrust: 0 });
+  assert.equal(sim.prediction, first, 'coasting frame should reuse the prediction');
+  sim.changeWarp(1);
+  sim.update(1 / 60, { turn: 0, thrust: 0 });
+  assert.notEqual(sim.prediction, first, 'warp change should refresh immediately');
+  const second = sim.prediction;
+  sim.update(1 / 60, { turn: 0, thrust: 1 }); // thrust is ignored at warp, so no refresh needed
+  for (let f = 0; f < 4; f++) sim.update(1 / 60, { turn: 0, thrust: 0 });
+  assert.notEqual(sim.prediction, second, 'prediction should refresh every few frames');
+});
+
+test('bodyVelocity is a central difference matching the analytic orbit speed', () => {
+  // EMBER is nearly circular: speed relative to the star ~ sqrt(gm/a).
+  const v = bodyVelocity(1, 0);
+  const b = BODIES[1];
+  const expect = Math.sqrt(BODIES[0].gm / b.a);
+  assert.ok(Math.abs(Math.hypot(v.x, v.y) - expect) / expect < 0.15);
 });
