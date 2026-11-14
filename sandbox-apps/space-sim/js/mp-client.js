@@ -121,7 +121,7 @@ export class MpClient {
     const wasShown = this.local ? this.predicted() : null;
     if (!mine.alive) {
       this.local = null;
-      this.pending.length = 0;
+      this.pending.splice(0, this.pending.length - 1); // keep the held input: the server still has it
       this.offset.x = this.offset.y = 0;
       return;
     }
