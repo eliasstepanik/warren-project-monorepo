@@ -146,8 +146,9 @@ test('WebSocket handshake answers 101 with the correct accept key', async () => 
 test('upgrade is refused on other paths and when headers are wrong', async () => {
   const s = await start();
   try {
-    const c = await TestClient.connect(s.port, '/other').catch(() => null);
-    assert.equal(c, null); // the server answers 404 and ends the socket, never 101
+    const c = await TestClient.connect(s.port, '/other');
+    assert.equal(c.handshake.split('\r\n')[0], 'HTTP/1.1 404 Not Found');
+    await c.closed;
   } finally {
     await s.close();
   }
