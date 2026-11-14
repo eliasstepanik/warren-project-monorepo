@@ -30,7 +30,7 @@ const INVULN_TICKS = ticks(INVULN_TIME);
 const PLANETS = BODIES.map((b, i) => i).filter((i) => BODIES[i].parent === 0);
 const SPAWN_TRIES = 24;
 
-const round = (v, n) => Math.round(v * n) / n;
+const round = (v, n) => Math.round(v * n) / n + 0; // + 0 turns -0 into 0 (JSON would anyway)
 
 /** Clamp an untrusted input to { rot: -1|0|1, thrust, retro, fire: 0|1, seq: int }. */
 export function sanitizeInput(raw) {
