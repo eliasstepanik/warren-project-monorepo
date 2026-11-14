@@ -204,6 +204,11 @@ export class WsConnection extends EventEmitter {
         if (f.payload.length === 1) throw new WsError(1002, 'bad close frame');
         const code = f.payload.length ? f.payload.readUInt16BE(0) : 1000;
         if (!validCloseCode(code)) throw new WsError(1002, 'bad close code');
+        try {
+          utf8.decode(f.payload.subarray(2));
+        } catch {
+          throw new WsError(1007, 'invalid utf-8 in close reason');
+        }
         this.close(code);
         return;
       }
