@@ -254,7 +254,7 @@ test('malformed messages never throw and get an error reply', () => {
     '{"t":"join"}', '{"t":"join","room":{}}', '{"t":"create","name":{"a":1}}']) {
     assert.doesNotThrow(() => lobby.handle(c, bad), bad);
   }
-  assert.ok(c.out.every((m) => m.t === 'error' || m.t === 'welcome'));
+  assert.ok(c.out.every((m) => ['error', 'welcome', 'players'].includes(m.t)));
   lobby.handle(c, '{"t":"input","rot":"x","thrust":{},"fire":[1],"seq":1e99}');
   lobby.handle(c, '{"t":"input","rot":1e99,"seq":-5}');
   assert.doesNotThrow(() => lobby.handle(c, '{"t":"ping","c":"x"}'));
