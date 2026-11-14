@@ -214,7 +214,7 @@ export class MpSim {
       });
     }
     return {
-      t: round(this.t, 1000),
+      t: round(this.time, 1000),
       ships,
       shots: this.projectiles.map((p) => ({
         id: p.id, o: p.owner,
