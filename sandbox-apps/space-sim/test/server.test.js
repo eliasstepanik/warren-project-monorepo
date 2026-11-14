@@ -324,7 +324,7 @@ test('end to end: two clients in one room get 2-ship snapshots and one fires', a
 });
 
 test('silent clients are dropped after the idle timeout', async () => {
-  const s = await start({ idleMs: 200 });
+  const s = await start({ idleMs: 200, graceMs: 0 });
   const c = await TestClient.connect(s.port);
   try {
     c.send({ t: 'create', name: 'Idle' });
