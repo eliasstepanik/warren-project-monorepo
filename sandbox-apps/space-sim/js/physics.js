@@ -170,9 +170,11 @@ const A1 = { x: 0, y: 0 };
 export function stepState(s, t, h, thrust = 0, cache = null) {
   const x0 = s.x;
   const y0 = s.y;
+  let pos0 = P0;
   if (cache && cache.t === t && cache.x === x0 && cache.y === y0) {
     A0.x = cache.ax;
     A0.y = cache.ay;
+    pos0 = cache.pos;
   } else {
     positionsAt(t, P0);
     gravityAt(x0, y0, P0, A0);
