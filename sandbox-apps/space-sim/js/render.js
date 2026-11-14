@@ -168,7 +168,9 @@ function drawPrediction(ctx, sim, cam) {
   let [ax, ay] = toScreen(cam, sim.ship.x, sim.ship.y);
   let lx = 0;
   let ly = 0;
-  for (let k = 0; k < p.n; k++) {
+  // Skip points the ship has already passed (the path can be a few frames old).
+  const k0 = Math.max(0, Math.ceil((sim.t - p.t0) / p.dt) - 1);
+  for (let k = k0; k < p.n; k++) {
     [lx, ly] = toScreen(cam, p.pts[k * 2] + ox, p.pts[k * 2 + 1] + oy);
     const offscreen = (ax < 0 && lx < 0) || (ax >= W && lx >= W) || (ay < 0 && ly < 0) || (ay >= H && ly >= H);
     if (offscreen) dash.n += Math.round(Math.max(Math.abs(lx - ax), Math.abs(ly - ay)));
