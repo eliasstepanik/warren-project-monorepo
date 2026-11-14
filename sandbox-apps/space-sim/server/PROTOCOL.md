@@ -12,8 +12,20 @@ still useful to measure latency. A client that does not read what is sent to it
 Limits (defaults, configurable when starting the server with the environment
 variables `MAX_CONNECTIONS`, `MAX_PER_IP` and `MAX_ROOMS`): 256 connections
 (more are refused with HTTP 503), 16 per IP address (HTTP 429, 0 = no cap) and
-64 rooms (`create` answers `{t:'error', msg:'server full'}`). Each client may
-send at most about 100 messages/s of any type; extra ones are dropped silently.
+64 rooms (`create` answers `{t:'error', msg:'server full'}` only when every
+room has players: if the cap is reached, the oldest empty room still in its
+grace period is deleted to make space). Invalid values of these variables
+(not a number, negative) are ignored and the default is used; `PORT` (default
+8080) works the same way. The per-IP cap uses the raw socket address
+(`remoteAddress`), so behind a reverse proxy all users share one address and
+one cap: raise `MAX_PER_IP` or set it to 0 there. Each client may send at most
+about 100 messages/s of any type; extra ones are dropped silently.
+
+Close codes sent by the server: 1000 (normal echo), 1001 (idle timeout), 1002
+(protocol error, including a bad close code), 1003 (binary message; only text
+is supported), 1007 (text, or a close reason, that is not valid UTF-8), 1008
+(too many failed joins), 1009 (message over 4096 bytes, or split into more than
+64 frames).
 
 Time is in seconds, distance in du, angles in radians (same units as
 `js/physics.js`). The simulation runs at 120 steps/s; snapshots are sent at
