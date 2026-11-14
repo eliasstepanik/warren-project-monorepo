@@ -168,6 +168,7 @@ export class MpSim {
       return true;
     });
 
+    this.time = t + STEP;
     for (const ship of this.ships.values()) {
       if (ship.alive) {
         if (ship.invuln > 0) ship.invuln--;
@@ -179,7 +180,6 @@ export class MpSim {
       }
     }
 
-    this.time = t + STEP;
     return events;
   }
 
