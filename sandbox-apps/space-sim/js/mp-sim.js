@@ -224,5 +224,3 @@ export class MpSim {
     };
   }
 }
-
-export { positionsAt };
