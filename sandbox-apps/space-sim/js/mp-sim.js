@@ -1,9 +1,8 @@
 // Multiplayer orbital combat simulation. Pure module: no DOM, no Node APIs, so
 // the server (and later the browser client, for prediction) can share it.
 //
-// Everything advances in whole fixed steps (STEP = 1/120 s). Times inside the
-// sim are counted in ticks so cooldowns and timers are exact; snapshots report
-// seconds. Ships and projectiles use physics.stepState, so they feel the same
+// Everything advances in whole fixed steps (STEP = 1/120 s). Cooldowns and
+// timers are counted in steps so they are exact; snapshots report seconds. Ships and projectiles use physics.stepState, so they feel the same
 // N-body gravity and use the same segment collision as the single-player ship.
 import {
   BODIES, STEP, THRUST, RETRO, TURN_RATE,
