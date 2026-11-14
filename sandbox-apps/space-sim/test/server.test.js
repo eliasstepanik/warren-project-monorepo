@@ -337,3 +337,197 @@ test('silent clients are dropped after the idle timeout', async () => {
     await s.close();
   }
 });
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const json = (m) => JSON.stringify(m);
+
+test('hidden paths are matched case-insensitively', () => {
+  const root = '/srv/app';
+  for (const p of ['/Server/server.js', '/SERVER/ws.js', '/Test/x.js', '/.ENV', '/Node_Modules/a']) {
+    assert.equal(resolveStatic(root, p), null, p);
+  }
+});
+
+test('names may contain an underscore, and the font can draw it', async () => {
+  assert.equal(sanitizeName('a_b'), 'a_b');
+  const { drawText } = await import('../js/font.js');
+  let rects = 0;
+  drawText({ fillRect: () => rects++ }, '_', 0, 0, '#fff');
+  assert.equal(rects, 3);
+});
+
+test('end to end: A creates, B joins by code, both see both names; A leaves, B sees only B', async () => {
+  const s = await start({ graceMs: 0 });
+  const a = await TestClient.connect(s.port);
+  const b = await TestClient.connect(s.port);
+  try {
+    a.send({ t: 'create', name: 'Ann' });
+    const wa = await a.next((m) => m.t === 'welcome');
+    b.send({ t: 'join', room: wa.room, name: 'Bob' });
+    const names = (m) => m.list.map((p) => p.name).sort();
+    for (const c of [a, b]) {
+      const both = await c.next((m) => m.t === 'players' && m.list.length === 2);
+      assert.deepEqual(names(both), ['Ann', 'Bob']);
+    }
+    a.send({ t: 'ping', c: 1 }); // still alive, then leave by closing
+    await a.next((m) => m.t === 'pong');
+    a.socket.write(encodeFrame(OP.CLOSE, Buffer.from([0x03, 0xe8]), { mask: true }));
+    await a.closed;
+    assert.equal(a.closeCode, 1000);
+    const left = await b.next((m) => m.t === 'players' && m.list.length === 1);
+    assert.deepEqual(left.list.map((p) => p.name), ['Bob']);
+    assert.deepEqual(s.lobby.rooms.get(wa.room).list().map((p) => p.name), ['Bob']);
+  } finally {
+    await a.end();
+    await b.end();
+    await s.close();
+  }
+});
+
+test('reload: an emptied room survives the grace period, so the new socket can rejoin; then it is deleted', async () => {
+  const s = await start({ graceMs: 150 });
+  try {
+    const a = await TestClient.connect(s.port);
+    a.send({ t: 'create', name: 'alice' });
+    const { room } = await a.next((m) => m.t === 'welcome');
+    await a.end(); // the old page goes away ...
+    await sleep(30);
+    assert.ok(s.lobby.rooms.has(room), 'room still there right after the last player left');
+    assert.equal(s.lobby.rooms.get(room).timer, null, 'but it no longer simulates');
+    const b = await TestClient.connect(s.port); // ... the reloaded page joins
+    b.send({ t: 'join', room, name: 'alice' });
+    const w = await b.next((m) => m.t === 'welcome');
+    assert.equal(w.id, 0);
+    assert.ok(s.lobby.rooms.get(room).timer, 'simulating again');
+    await sleep(250); // the cancelled expiry must not delete a room that has players
+    assert.ok(s.lobby.rooms.has(room));
+    await b.next((m) => m.t === 'snap');
+    await b.end();
+    for (let i = 0; i < 50 && s.lobby.rooms.size; i++) await sleep(20);
+    assert.equal(s.lobby.rooms.size, 0, 'deleted after the grace period');
+  } finally {
+    await s.close();
+  }
+});
+
+test('connection limits: 503 over MAX_CONNECTIONS, 429 over the per-IP cap, slots are freed', async () => {
+  const s = await start({ maxConnections: 2, maxPerIp: 0 });
+  try {
+    const a = await TestClient.connect(s.port);
+    const b = await TestClient.connect(s.port);
+    const c = await TestClient.connect(s.port);
+    assert.equal(c.handshake.split('\r\n')[0], 'HTTP/1.1 503 Service Unavailable');
+    await c.closed;
+    await a.end();
+    for (let i = 0; i < 50; i++) {
+      const d = await TestClient.connect(s.port);
+      if (d.handshake.startsWith('HTTP/1.1 101')) {
+        await d.end();
+        break;
+      }
+      assert.ok(i < 49, 'a slot was never freed');
+      await sleep(20);
+    }
+    await b.end();
+  } finally {
+    await s.close();
+  }
+  const t = await start({ maxPerIp: 2 });
+  try {
+    const a = await TestClient.connect(t.port);
+    const b = await TestClient.connect(t.port);
+    const c = await TestClient.connect(t.port);
+    assert.equal(c.handshake.split('\r\n')[0], 'HTTP/1.1 429 Too Many Requests');
+    await a.end();
+    await b.end();
+  } finally {
+    await t.close();
+  }
+});
+
+test('room limit: create answers server full, join still works', () => {
+  const lobby = new Lobby({ loop: false, maxRooms: 2, graceMs: 0 });
+  const [a, b, c] = [fake(), fake(), fake()];
+  lobby.handle(a, json({ t: 'create', name: 'A' }));
+  lobby.handle(b, json({ t: 'create', name: 'B' }));
+  lobby.handle(c, json({ t: 'create', name: 'C' }));
+  assert.deepEqual(c.out, [{ t: 'error', msg: 'server full' }]);
+  assert.equal(lobby.rooms.size, 2);
+  lobby.handle(c, json({ t: 'join', room: a.room.code, name: 'C' }));
+  assert.equal(c.out.at(-2).t, 'welcome');
+  lobby.leave(a);
+  lobby.leave(c);
+  lobby.handle(a, json({ t: 'create', name: 'A' }));
+  assert.equal(a.out.at(-2).t, 'welcome', 'a freed room slot can be used again');
+  lobby.close();
+});
+
+test('every message type is rate limited, inputs separately', () => {
+  const lobby = new Lobby({ loop: false });
+  const c = fake();
+  for (let i = 0; i < 1000; i++) lobby.handle(c, '{"t":"ping","c":1}');
+  const pongs = c.out.filter((m) => m.t === 'pong').length;
+  assert.ok(pongs >= MESSAGE_RATE - 5 && pongs <= MESSAGE_RATE + 30, `pongs ${pongs}`);
+  const d = fake();
+  for (let i = 0; i < 1000; i++) lobby.handle(d, 'junk');
+  assert.ok(d.out.length <= MESSAGE_RATE + 30, `errors ${d.out.length}`);
+  lobby.close();
+});
+
+test('create/join work once per connection; failed joins are capped', () => {
+  const lobby = new Lobby({ loop: false, graceMs: 0 });
+  const host = fake();
+  lobby.handle(host, json({ t: 'create', name: 'H' }));
+  const code = host.room.code;
+  lobby.handle(host, json({ t: 'create', name: 'H' }));
+  lobby.handle(host, json({ t: 'join', room: code, name: 'H' }));
+  assert.deepEqual(host.out.slice(-2), [{ t: 'error', msg: 'already in a room' }, { t: 'error', msg: 'already in a room' }]);
+  assert.equal(host.room.players.size, 1);
+
+  let closed = null;
+  const guesser = fake();
+  guesser.close = (c) => { closed = c; };
+  for (let i = 0; i < 4; i++) lobby.handle(guesser, json({ t: 'join', room: 'ZZZZ', name: 'G' }));
+  assert.equal(closed, null, 'four failures are tolerated');
+  assert.match(guesser.out[3].msg, /not found/);
+  lobby.handle(guesser, json({ t: 'join', room: 'ZZZZ', name: 'G' }));
+  assert.equal(closed, 1008, 'the fifth closes the connection');
+  lobby.leave(host);
+  lobby.close();
+});
+
+test('a guessing client is closed with 1008 over a real socket', async () => {
+  const s = await start();
+  try {
+    const c = await TestClient.connect(s.port);
+    for (let i = 0; i < 5; i++) c.send({ t: 'join', room: 'QQQQ', name: 'G' });
+    await c.closed;
+    assert.equal(c.closeCode, 1008);
+  } finally {
+    await s.close();
+  }
+});
+
+test('any received frame, a WebSocket pong included, keeps a quiet client alive; the server pings', async () => {
+  const s = await start({ idleMs: 300, graceMs: 0 });
+  const c = await TestClient.connect(s.port);
+  try {
+    c.send({ t: 'create', name: 'Quiet' });
+    await c.next((m) => m.t === 'welcome');
+    c.socket.on('data', () => {}); // keep reading
+    let pings = 0;
+    const origOnData = c.onData.bind(c);
+    c.onData = (d) => { if (d.includes(Buffer.from([0x89, 0x00]))) pings++; origOnData(d); };
+    c.socket.removeAllListeners('data');
+    c.socket.on('data', (d) => c.onData(d));
+    for (let i = 0; i < 10; i++) { // 1 s, over three idle timeouts
+      await sleep(100);
+      c.socket.write(encodeFrame(OP.PONG, '', { mask: true }));
+    }
+    assert.equal(c.closeCode, null, 'still connected');
+    assert.ok(pings >= 1, `server pings seen: ${pings}`);
+  } finally {
+    await c.end();
+    await s.close();
+  }
+});
