@@ -219,3 +219,32 @@ test('scoreboard is sorted by kills and me() reports my status', () => {
   c.onSnapshot(snapOf(7, [ship(1, { alive: 0, k: 3, d: 2 })]), 2000);
   assert.ok(Math.abs(c.me(2500).respawnIn - 1.5) < 1e-9);
 });
+
+test('a reused ship id does not interpolate with the previous pilot', () => {
+  const c = welcomed(0, [{ id: 0, name: 'AL', color: 0 }, { id: 1, name: 'BO', color: 1 }]);
+  c.onSnapshot(snapOf(1, [ship(0), ship(1, { x: 100 })]), 0);
+  // BO leaves and CY takes id 1 somewhere else.
+  c.onPlayers({ list: [{ id: 0, name: 'AL', color: 0 }] });
+  c.onPlayers({ list: [{ id: 0, name: 'AL', color: 0 }, { id: 1, name: 'CY', color: 1 }] });
+  c.onSnapshot(snapOf(1.05, [ship(0), ship(1, { x: 900 })]), 50);
+  const r = c.interpolated(50 + INTERP_DELAY - 25);
+  assert.equal(r.ships.length, 1);
+  assert.equal(r.ships[0].x, 900, 'no blend with BO at x=100');
+  assert.equal(c.scoreboard().length, 2);
+  // Unrelated player changes keep the history of the other ships.
+  c.onPlayers({ list: [{ id: 0, name: 'AL', color: 0 }, { id: 1, name: 'CY', color: 1 }] });
+  assert.equal(c.snaps.length, 2);
+  assert.ok(c.snaps.every((e) => e.snap.ships.some((s) => s.id === 0)));
+});
+
+test('death keeps the held input so it still applies after the respawn', () => {
+  const c = welcomed(0);
+  c.applyLocalInput({ rot: 0, thrust: 1 }, 1);
+  c.stepLocal(STEP * 3);
+  c.applyLocalInput({ rot: 1, thrust: 0 }, 2);
+  c.onSnapshot(snapOf(1, [ship(0, { x: 1500, alive: 0, seq: 2 })]), 0);
+  assert.equal(c.predicted(), null);
+  assert.equal(c.pending.length, 1);
+  assert.equal(c.pending[0].seq, 2);
+  assert.equal(c.inputAt(c.stepCount).rot, 1, 'still held');
+});
