@@ -383,12 +383,11 @@ export function createGameServer({
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const port = Number(process.env.PORT) || 8080;
-  const env = (name, fallback) => (process.env[name] === undefined ? fallback : Number(process.env[name]));
+  const port = envNumber('PORT', 8080);
   const { server } = createGameServer({
-    maxConnections: env('MAX_CONNECTIONS', MAX_CONNECTIONS),
-    maxPerIp: env('MAX_PER_IP', MAX_PER_IP),
-    maxRooms: env('MAX_ROOMS', MAX_ROOMS),
+    maxConnections: envNumber('MAX_CONNECTIONS', MAX_CONNECTIONS),
+    maxPerIp: envNumber('MAX_PER_IP', MAX_PER_IP),
+    maxRooms: envNumber('MAX_ROOMS', MAX_ROOMS),
   });
   server.listen(port, () => console.log(`space-sim server on http://localhost:${port}/`));
 }
