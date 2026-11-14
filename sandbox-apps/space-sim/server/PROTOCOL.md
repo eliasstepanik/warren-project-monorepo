@@ -64,7 +64,18 @@ with `positionsAt(snap.time)` from `js/physics.js`.
 | `{t:'snap', time, ships, shots}` | World state, 20 Hz. |
 | `{t:'event', type, ...}` | Something happened; sent as it happens. |
 | `{t:'pong', c}` | Reply to `ping`. |
-| `{t:'error', msg}` | A request failed (full room, unknown room, bad message...). |
+| `{t:'error', msg}` | A request failed; see below. |
+
+`error` messages (`msg`):
+
+- `server full`: `create` while all 64 rooms have players.
+- `already in a room`: `create` or `join` while in a room.
+- `not in a room`: `input` before `create`/`join`.
+- `unknown message type`: `t` is a string the server does not know.
+- `bad message`: not JSON, not an object, or `t` is not a string.
+- `invalid room code`: `join` with something other than 4 letters.
+- `room XXXX not found`: no such room.
+- `room XXXX is full`: the room already has 4 players.
 
 `players` is `list` of `{id, name, color}`.
 
