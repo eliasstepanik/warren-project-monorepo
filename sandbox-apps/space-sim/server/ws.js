@@ -6,7 +6,14 @@ import { EventEmitter } from 'node:events';
 
 export const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 export const MAX_MESSAGE = 4096; // bytes; larger messages close the socket with 1009
+export const MAX_FRAGMENTS = 64; // frames per message; more close the socket with 1009
+export const MAX_BUFFERED = 256 * 1024; // bytes queued for a slow reader before it is dropped
 export const OP = { CONT: 0, TEXT: 1, BINARY: 2, CLOSE: 8, PING: 9, PONG: 10 };
+
+/** Close codes a peer may send (RFC 6455 7.4): 1000-1003, 1007-1014 and 3000-4999. */
+export function validCloseCode(code) {
+  return (code >= 1000 && code <= 1003) || (code >= 1007 && code <= 1014) || (code >= 3000 && code <= 4999);
+}
 
 export class WsError extends Error {
   constructor(code, message) {
