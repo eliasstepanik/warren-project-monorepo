@@ -59,8 +59,10 @@ unaffected.
 4. **Leave / back to singleplayer** closes the connection. If the server drops
    you the screen says DISCONNECTED until you leave.
 
-While the tab is hidden the connection stays up but rendering stops and a
-neutral input is sent so the ship stops thrusting and firing.
+While the tab is hidden the connection stays up (the server pings every 10 s,
+the browser answers by itself, and any received frame counts as activity before
+the 30 s idle timeout) but rendering stops and a neutral input is sent so the
+ship stops thrusting and firing. The server limits are in `server/PROTOCOL.md`.
 
 Code: `js/net.js` (WebSocket), `js/mp-client.js` (prediction, interpolation,
 feed, scoreboard), `js/render-mp.js` (drawing), `js/lobby.js` (lobby UI), and
