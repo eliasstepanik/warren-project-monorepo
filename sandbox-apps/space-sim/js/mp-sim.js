@@ -55,6 +55,20 @@ function segmentDistance(ax, ay, bx, by) {
   return Math.hypot(ax + u * sx, ay + u * sy);
 }
 
+/**
+ * Advance one ship by one fixed step at time t under `input` (rotation, then
+ * engine, then N-body step). `ship` needs { x, y, vx, vy, angle, cache }; px/py
+ * receive the position before the step. Returns the body index hit, or -1.
+ * Shared with the client so its prediction uses exactly the server's physics.
+ */
+export function stepShip(ship, t, input) {
+  ship.angle += input.rot * TURN_RATE * STEP;
+  const thrust = input.thrust ? THRUST : input.retro ? -RETRO : 0;
+  ship.px = ship.x;
+  ship.py = ship.y;
+  return stepState(ship, t, STEP, thrust, ship.cache);
+}
+
 export class MpSim {
   /** `rng` returns a number in [0, 1); inject a seeded one in tests. */
   constructor({ rng = Math.random } = {}) {
@@ -140,12 +154,7 @@ export class MpSim {
 
     for (const ship of this.ships.values()) {
       if (!ship.alive) continue;
-      const inp = ship.input;
-      ship.angle += inp.rot * TURN_RATE * STEP;
-      const thrust = inp.thrust ? THRUST : inp.retro ? -RETRO : 0;
-      ship.px = ship.x;
-      ship.py = ship.y;
-      const hit = stepState(ship, t, STEP, thrust, ship.cache);
+      const hit = stepShip(ship, t, ship.input);
       if (hit >= 0) this.kill(ship, events, { type: 'crash', id: ship.id, body: hit });
     }
 
