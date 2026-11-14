@@ -144,6 +144,7 @@ export class Lobby {
     this.maxJoinFails = options.maxJoinFails ?? MAX_JOIN_FAILS;
     this.rooms = new Map();
     this.closed = false; // set by close(): create/join/leave then do nothing, so no timer is armed
+  }
 
   newCode() {
     for (;;) {
