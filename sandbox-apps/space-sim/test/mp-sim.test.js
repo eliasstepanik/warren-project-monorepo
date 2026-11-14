@@ -68,6 +68,7 @@ test('add enforces the 4 ship limit and remove drops ships and their shots', () 
 
 test('firing is limited by the cooldown and shots expire after their lifetime', () => {
   const { sim } = pair();
+  sim.remove(2); // keep the line of fire clear
   sim.setInput(1, { fire: 1 });
   run(sim, steps(1.0));
   assert.equal(sim.projectiles.length, Math.floor(1.0 / FIRE_COOLDOWN) + 1);
