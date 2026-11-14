@@ -2,59 +2,104 @@
 import { Sim } from './sim.js';
 import { render, W, H } from './render.js';
 
-const CONTROL_KEYS = new Set([
-  'KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
-  'Space', 'Comma', 'Period', 'KeyQ', 'KeyE', 'KeyR', 'Equal', 'Minus',
-  'NumpadAdd', 'NumpadSubtract',
+// Movement keys are matched on e.code (physical position, so WASD works on any
+// layout). Zoom, warp, reset and pause are matched on e.key (the typed
+// character), which is what `,` `.` `+` `-` produce reliably.
+const CODE_KEYS = new Set([
+  'KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space',
 ]);
+const WARP_DOWN = new Set([',', '<', 'q']);
+const WARP_UP = new Set(['.', '>', 'e']);
+const ZOOM_IN = new Set(['+', '=']);
+const ZOOM_OUT = new Set(['-', '_']);
+const ACTION_KEYS = new Set([...WARP_DOWN, ...WARP_UP, ...ZOOM_IN, ...ZOOM_OUT, 'r', 'p']);
+
+const WHEEL_THRESHOLD = 100; // accumulated deltaY per zoom level
+const MIN_INTEGER_WIDTH = 320; // below this, fall back to fluid scaling
 
 export function start(canvas) {
   const ctx = canvas.getContext('2d', { alpha: false });
-  ctx.imageSmoothingEnabled = false;
   const sim = new Sim();
   const keys = new Set();
   const ui = { focused: false, paused: false };
   let last = performance.now();
+  let raf = 0;
+  let wheel = 0;
 
   canvas.width = W;
   canvas.height = H;
   canvas.tabIndex = 0;
+  // Resizing a canvas resets its context state, so set this afterwards.
+  ctx.imageSmoothingEnabled = false;
 
-  /** Integer scale: the largest whole multiple of W x H that fits the wrapper. */
+  /**
+   * Integer scale: the largest whole multiple of W x H (in device pixels) that
+   * fits the parent's content box. The canvas uses content-box sizing, so its
+   * own border is subtracted from the space available.
+   */
   function resize() {
-    const avail = canvas.parentElement.clientWidth;
-    const scale = Math.max(1, Math.floor(avail / W));
+    const parent = canvas.parentElement;
+    const ps = getComputedStyle(parent);
+    const cs = getComputedStyle(canvas);
+    const inner = parent.clientWidth - parseFloat(ps.paddingLeft) - parseFloat(ps.paddingRight);
+    const avail = inner - parseFloat(cs.borderLeftWidth) - parseFloat(cs.borderRightWidth);
+    if (!(avail >= MIN_INTEGER_WIDTH)) {
+      canvas.classList.add('fluid');
+      canvas.style.width = '';
+      canvas.style.height = '';
+      return;
+    }
+    canvas.classList.remove('fluid');
+    const dpr = window.devicePixelRatio || 1;
+    const scale = Math.floor((avail * dpr) / W) / dpr;
     canvas.style.width = `${W * scale}px`;
     canvas.style.height = `${H * scale}px`;
   }
-  window.addEventListener('resize', resize);
+  if (typeof ResizeObserver === 'function') new ResizeObserver(resize).observe(canvas.parentElement);
+  window.addEventListener('resize', resize); // also catches devicePixelRatio changes
   resize();
 
-  canvas.addEventListener('focus', () => { ui.focused = true; });
-  canvas.addEventListener('blur', () => { ui.focused = false; keys.clear(); });
+  function setFocused(v) {
+    ui.focused = v;
+    canvas.classList.toggle('focused', v);
+    if (!v) {
+      keys.clear();
+      wheel = 0;
+    }
+  }
+  canvas.addEventListener('focus', () => setFocused(true));
+  canvas.addEventListener('blur', () => setFocused(false));
   canvas.addEventListener('mousedown', () => canvas.focus());
 
   canvas.addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
-    if (CONTROL_KEYS.has(e.code)) e.preventDefault();
+    const k = e.key.toLowerCase();
+    const handled = CODE_KEYS.has(e.code) || ACTION_KEYS.has(k);
+    if (handled) e.preventDefault();
     if (e.repeat) return;
-    keys.add(e.code);
-    switch (e.code) {
-      case 'Comma': case 'KeyQ': sim.changeWarp(-1); break;
-      case 'Period': case 'KeyE': sim.changeWarp(1); break;
-      case 'Equal': case 'NumpadAdd': sim.changeZoom(1); break;
-      case 'Minus': case 'NumpadSubtract': sim.changeZoom(-1); break;
-      case 'KeyR': sim.reset(); break;
-      default:
-    }
+    if (CODE_KEYS.has(e.code)) keys.add(e.code);
+    if (WARP_DOWN.has(k)) sim.changeWarp(-1);
+    else if (WARP_UP.has(k)) sim.changeWarp(1);
+    else if (ZOOM_IN.has(k)) sim.changeZoom(1);
+    else if (ZOOM_OUT.has(k)) sim.changeZoom(-1);
+    else if (k === 'r') sim.reset();
+    else if (k === 'p') ui.paused = !ui.paused;
   });
   canvas.addEventListener('keyup', (e) => {
     keys.delete(e.code);
-    if (CONTROL_KEYS.has(e.code)) e.preventDefault();
+    if (CODE_KEYS.has(e.code) || ACTION_KEYS.has(e.key.toLowerCase())) e.preventDefault();
   });
+
+  // Only capture the wheel while focused so the page can still scroll. Trackpads
+  // send many small deltas, so accumulate them and zoom one level per threshold.
   canvas.addEventListener('wheel', (e) => {
+    if (document.activeElement !== canvas) return;
     e.preventDefault();
-    sim.changeZoom(e.deltaY < 0 ? 1 : -1);
+    wheel += e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY;
+    while (Math.abs(wheel) >= WHEEL_THRESHOLD) {
+      sim.changeZoom(wheel < 0 ? 1 : -1);
+      wheel -= Math.sign(wheel) * WHEEL_THRESHOLD;
+    }
   }, { passive: false });
 
   function down(...codes) {
@@ -62,8 +107,10 @@ export function start(canvas) {
   }
 
   function frame(now) {
-    // Clamp so a long stall (breakpoint, slow frame) cannot explode the step count.
-    const dt = Math.min(0.1, (now - last) / 1000);
+    raf = requestAnimationFrame(frame);
+    // Clamp so a long stall (breakpoint, slow frame) cannot explode the step
+    // count, and so the delta is never negative.
+    const dt = Math.max(0, Math.min(0.1, (now - last) / 1000));
     last = now;
     if (!ui.paused) {
       sim.update(dt, {
@@ -72,16 +119,31 @@ export function start(canvas) {
       });
     }
     render(ctx, sim, ui);
-    requestAnimationFrame(frame);
   }
 
-  // Pause while the tab is hidden; resume without a time jump.
-  document.addEventListener('visibilitychange', () => {
-    ui.paused = document.hidden;
-    last = performance.now();
-    if (document.hidden) keys.clear();
-  });
+  // Run the loop only while the canvas is on screen and the tab is visible;
+  // resume without a time jump.
+  let onScreen = true;
+  function syncLoop() {
+    if (onScreen && !document.hidden) {
+      if (!raf) {
+        last = performance.now();
+        raf = requestAnimationFrame(frame);
+      }
+    } else {
+      cancelAnimationFrame(raf);
+      raf = 0;
+      keys.clear();
+    }
+  }
+  document.addEventListener('visibilitychange', syncLoop);
+  if (typeof IntersectionObserver === 'function') {
+    new IntersectionObserver((entries) => {
+      onScreen = entries[entries.length - 1].isIntersecting;
+      syncLoop();
+    }).observe(canvas);
+  }
 
-  requestAnimationFrame(frame);
-  return { canvas, sim };
+  syncLoop();
+  return { canvas, sim, ui, setFocused };
 }

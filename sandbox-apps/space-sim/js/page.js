@@ -13,13 +13,14 @@ function seeded(seed) {
 
 function starfield(canvas) {
   const ctx = canvas.getContext('2d');
-  const w = 200;
+  // Match the viewport's aspect ratio so the pixels stay square.
   const h = 120;
+  const w = Math.max(1, Math.round((h * window.innerWidth) / Math.max(1, window.innerHeight)));
   canvas.width = w;
   canvas.height = h;
   const rnd = seeded(7);
   const stars = [];
-  for (let i = 0; i < 170; i++) {
+  for (let i = 0; i < Math.round((w * h) / 140); i++) {
     stars.push({
       x: Math.floor(rnd() * w),
       y: Math.floor(rnd() * h),
@@ -28,6 +29,13 @@ function starfield(canvas) {
     });
   }
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let timer = 0; // single pending timeout / rAF handle, cancelled before rescheduling
+  let raf = 0;
+  function schedule(delay) {
+    clearTimeout(timer);
+    cancelAnimationFrame(raf);
+    timer = setTimeout(() => { raf = requestAnimationFrame(draw); }, delay);
+  }
   function draw(now) {
     ctx.fillStyle = PAL.night;
     ctx.fillRect(0, 0, w, h);
@@ -36,12 +44,17 @@ function starfield(canvas) {
       ctx.fillStyle = PAL[dim ? 'darkBlue' : s.color];
       ctx.fillRect(s.x, s.y, 1, 1);
     }
-    if (!reduced && !document.hidden) setTimeout(() => requestAnimationFrame(draw), 120);
+    if (!reduced && !document.hidden) schedule(120);
   }
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) requestAnimationFrame(draw);
+    if (document.hidden) {
+      clearTimeout(timer);
+      cancelAnimationFrame(raf);
+    } else {
+      schedule(0);
+    }
   });
-  requestAnimationFrame(draw);
+  schedule(0);
 }
 
 function title(canvas, text) {
@@ -49,6 +62,14 @@ function title(canvas, text) {
   const scale = 2;
   canvas.width = textWidth(text, scale) + 4;
   canvas.height = 5 * scale + 4;
+  // Show it at a whole-number multiple of its pixel size (CSS sizes it fluidly).
+  const fit = () => {
+    const avail = Math.min(window.innerWidth * 0.92, 720);
+    const k = Math.max(1, Math.floor(avail / canvas.width));
+    canvas.style.width = `${canvas.width * k}px`;
+  };
+  fit();
+  window.addEventListener('resize', fit);
   drawText(ctx, text, 3, 3, PAL.darkPurple, scale); // hard drop shadow
   drawText(ctx, text, 2, 2, PAL.orange, scale);
   drawText(ctx, text, 2, 1, PAL.yellow, scale);
@@ -64,4 +85,5 @@ document.getElementById('play').addEventListener('click', (e) => {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   document.getElementById('demo').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
   game.canvas.focus({ preventScroll: true });
+  game.setFocused(true); // focus events may not fire if the window is not active
 });

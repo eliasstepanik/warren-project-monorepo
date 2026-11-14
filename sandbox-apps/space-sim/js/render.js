@@ -166,8 +166,8 @@ function drawPrediction(ctx, sim, cam) {
   ctx.fillStyle = PAL[p.hit >= 0 ? 'pink' : 'green'];
   const dash = { n: 0 };
   let [ax, ay] = toScreen(cam, sim.ship.x, sim.ship.y);
-  let lx = 0;
-  let ly = 0;
+  let lx = ax;
+  let ly = ay;
   // Skip points the ship has already passed (the path can be a few frames old).
   const k0 = Math.max(0, Math.ceil((sim.t - p.t0) / p.dt) - 1);
   for (let k = k0; k < p.n; k++) {
