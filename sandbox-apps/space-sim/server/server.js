@@ -83,6 +83,9 @@ export class Room {
     client.room = this;
     this.players.set(id, client);
     this.sim.add(id, client.name, id);
+    clearTimeout(this.expiry);
+    this.expiry = null;
+    this.start();
   }
 
   remove(client) {
