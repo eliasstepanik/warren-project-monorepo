@@ -8,9 +8,9 @@ export const W = 320;
 export const H = 180;
 
 const SHIP_SHAPE = [ // pixels in ship space, +x = nose
-  [3, 0], [2, 0], [1, 0], [0, 0], [-1, 0],
-  [1, -1], [0, -1], [-1, -1], [-2, -2],
-  [1, 1], [0, 1], [-1, 1], [-2, 2],
+  [2, 0], [1, 0], [0, 0], [-1, 0],
+  [0, -1], [-1, -1],
+  [0, 1], [-1, 1],
 ];
 
 function px(ctx, x, y, color) {
