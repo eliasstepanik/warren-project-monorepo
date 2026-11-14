@@ -127,6 +127,18 @@ test('segmentCollision catches a fast pass through a small body', () => {
   assert.equal(segmentCollision(x - 20, y + 10, x + 20, y + 10, pos), -1);
 });
 
+test('segmentCollision accounts for the body moving during the step', () => {
+  const pos0 = positionsAt(0);
+  const mote = BODIES.findIndex((b) => b.name === 'MOTE');
+  const { x, y } = pos0[mote];
+  // MOTE sweeps 40 du across a stationary ship; both endpoints are outside it.
+  const pos1 = pos0.map((p, i) => (i === mote ? { x: x + 40, y } : { x: p.x, y: p.y }));
+  const start = { x: x + 20, y };
+  assert.equal(segmentCollision(start.x, start.y, start.x, start.y, pos0, pos1), mote);
+  // Against the end positions alone the ship is 20 du away and nothing is hit.
+  assert.equal(segmentCollision(start.x, start.y, start.x, start.y, pos1), -1);
+});
+
 test('prediction detects a collision with MOTE that endpoint checks would miss', () => {
   const t = 0;
   const pos = positionsAt(t);
