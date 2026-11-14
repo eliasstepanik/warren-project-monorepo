@@ -219,7 +219,10 @@ export class WsConnection extends EventEmitter {
     }
     this.frag.chunks.push(f.payload);
     this.frag.size += f.payload.length;
-    if (this.frag.size > this.maxMessage) throw new WsError(1009, 'message too big');
+    // Empty frames add no bytes, so the chunk count needs its own limit.
+    if (this.frag.size > this.maxMessage || this.frag.chunks.length > MAX_FRAGMENTS) {
+      throw new WsError(1009, 'message too big');
+    }
     if (!f.fin) return;
     const data = Buffer.concat(this.frag.chunks);
     this.frag = null;
