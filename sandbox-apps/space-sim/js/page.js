@@ -59,10 +59,12 @@ function starfield(canvas) {
       schedule(0);
     }
   });
+  window.addEventListener('resize', () => {
+    build(); // resizing the canvas clears it, so redraw straight away
+    if (!document.hidden) schedule(0);
+  });
   schedule(0);
-}
-
-function title(canvas, text) {
+}(canvas, text) {
   const ctx = canvas.getContext('2d');
   const scale = 2;
   canvas.width = textWidth(text, scale) + 4;
