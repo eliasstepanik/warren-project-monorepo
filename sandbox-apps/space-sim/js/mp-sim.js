@@ -110,7 +110,7 @@ export class MpSim {
       for (const o of this.ships.values()) {
         if (o !== ship && o.alive) clear = Math.min(clear, Math.hypot(o.x - s.x, o.y - s.y));
       }
-      if (clear > bestClear && predict(s, this.t, 50, 0.1).hit < 0) {
+      if (clear > bestClear && predict(s, this.time, 50, 0.1).hit < 0) {
         best = s;
         bestClear = clear;
       }
