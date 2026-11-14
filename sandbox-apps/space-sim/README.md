@@ -19,7 +19,9 @@ node server/server.js           # static files + multiplayer, PORT=8080 by defau
 ```
 
 The multiplayer server (`server/`, no dependencies) is documented in
-`server/PROTOCOL.md`; the shared combat simulation is `js/mp-sim.js`.
+`server/PROTOCOL.md`; the shared combat simulation is `js/mp-sim.js`. The
+per-IP connection cap uses the raw socket address, so behind a reverse proxy
+all users share it (see `MAX_PER_IP` there).
 
 ## Controls
 
