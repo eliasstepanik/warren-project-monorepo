@@ -105,7 +105,9 @@ test('a small server-side correction is smoothed, a large one snaps', () => {
 
   const big = simulate({ ticks: 400, script, perturb: nudge(SNAP_DISTANCE * 3, 200) });
   let biggest = 0;
-  for (let c = 1; c < 400; c++) biggest = Math.max(biggest, Math.abs(big.shown[c].x - big.shown[c - 1].x));
+  for (let c = 1; c < 400; c++) {
+    if (big.shown[c - 1]) biggest = Math.max(biggest, Math.abs(big.shown[c].x - big.shown[c - 1].x));
+  }
   assert.ok(biggest > SNAP_DISTANCE, `snap jump ${biggest}`);
 });
 
