@@ -519,7 +519,8 @@ test('any received frame, a WebSocket pong included, keeps a quiet client alive;
     c.onData = (d) => {
       if (d.includes(Buffer.from([0x89, 0x00]))) pings++; // an unmasked, empty PING frame
       onData(d);
-    }; (let i = 0; i < 10; i++) { // 1 s, over three idle timeouts
+    };
+    for (let i = 0; i < 10; i++) { // 1 s, over three idle timeouts
       await sleep(100);
       c.socket.write(encodeFrame(OP.PONG, '', { mask: true }));
     }
