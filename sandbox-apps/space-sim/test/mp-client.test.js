@@ -114,10 +114,16 @@ test('without an rtt estimate it replays the inputs the server has not seen', ()
   c.stepLocal(STEP * 10);
   c.applyLocalInput({ rot: 0, thrust: 0 }, 2);
   c.stepLocal(STEP * 5);
-  c.onSnapshot(snapOf(1, [ship(0, { x: 1500, y: 0, seq: 1 })]), 0);
-  // 5 steps coasting from the server state: nothing was accelerated yet by seq 2
-  const p = c.predicted();
-  assert.ok(p && p.x > 1499 && p.x < 1501 && p.vx > 0);
+  const at = (seq) => {
+    const d = welcomed(0);
+    d.pending = c.pending.map((e) => ({ ...e }));
+    d.stepCount = c.stepCount;
+    d.onSnapshot(snapOf(1, [ship(0, { x: 1500, y: 0, seq })]), 0);
+    return d.predicted();
+  };
+  // seq 1 seen: only the 5 coasting steps are replayed; seq 0: the 10 thrust steps too
+  assert.ok(Math.abs(at(1).vx) < 0.1, `vx ${at(1).vx}`);
+  assert.ok(at(0).vx > 1, `vx ${at(0).vx}`);
 });
 
 test('a dead ship has no prediction until it respawns', () => {
