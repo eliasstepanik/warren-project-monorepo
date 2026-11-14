@@ -194,13 +194,17 @@ export class WsConnection extends EventEmitter {
     if (!f.masked) throw new WsError(1002, 'client frames must be masked');
     switch (f.opcode) {
       case OP.PING:
-        this.socket.write(encodeFrame(OP.PONG, f.payload));
+        this.write(encodeFrame(OP.PONG, f.payload));
         return;
       case OP.PONG:
         return;
-      case OP.CLOSE:
-        this.close(f.payload.length >= 2 ? f.payload.readUInt16BE(0) : 1000);
+      case OP.CLOSE: {
+        if (f.payload.length === 1) throw new WsError(1002, 'bad close frame');
+        const code = f.payload.length ? f.payload.readUInt16BE(0) : 1000;
+        if (!validCloseCode(code)) throw new WsError(1002, 'bad close code');
+        this.close(code);
         return;
+      }
       case OP.TEXT:
         if (this.frag) throw new WsError(1002, 'unexpected text frame');
         this.frag = { chunks: [], size: 0 };
