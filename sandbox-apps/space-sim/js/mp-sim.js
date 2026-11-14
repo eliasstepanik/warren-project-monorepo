@@ -60,15 +60,10 @@ export class MpSim {
   /** `rng` returns a number in [0, 1); inject a seeded one in tests. */
   constructor({ rng = Math.random } = {}) {
     this.rng = rng;
-    this.tick = 0;
+    this.time = 0; // simulation time in seconds, advanced by exactly STEP per step
     this.ships = new Map(); // id -> ship
     this.projectiles = [];
     this.nextProjectile = 1;
-  }
-
-  /** Simulation time in seconds. */
-  get t() {
-    return this.tick * STEP;
   }
 
   /** Add a ship (spawned at once, invulnerable). Returns the ship. */
