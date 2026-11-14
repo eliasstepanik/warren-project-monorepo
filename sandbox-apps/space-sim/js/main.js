@@ -113,7 +113,7 @@ export function start(canvas) {
   canvas.addEventListener('wheel', (e) => {
     if (document.activeElement !== canvas) return;
     e.preventDefault();
-    wheel += e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY;
+    wheel += e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * 400 : e.deltaY;
     while (Math.abs(wheel) >= WHEEL_THRESHOLD) {
       sim.changeZoom(wheel < 0 ? 1 : -1);
       wheel -= Math.sign(wheel) * WHEEL_THRESHOLD;
