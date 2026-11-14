@@ -153,9 +153,23 @@ export class Lobby {
     }
   }
 
+  /** Delete the room that has been empty (in its grace period) the longest. False if there is none. */
+  evictGraceRoom() {
+    let oldest = null;
+    for (const room of this.rooms.values()) {
+      if (room.players.size === 0 && (!oldest || room.emptyAt < oldest.emptyAt)) oldest = room;
+    }
+    if (!oldest) return false;
+    clearTimeout(oldest.expiry);
+    oldest.expiry = null;
+    this.rooms.delete(oldest.code);
+    return true;
+  }
+
   create(client, name) {
+    if (this.closed) return undefined;
     if (client.room) return client.send({ t: 'error', msg: 'already in a room' });
-    if (this.rooms.size >= this.maxRooms) return client.send({ t: 'error', msg: 'server full' });
+    if (this.rooms.size >= this.maxRooms && !this.evictGraceRoom()) return client.send({ t: 'error', msg: 'server full' });
     const room = new Room(this.newCode(), this.options);
     this.rooms.set(room.code, room);
     return this.enter(client, room, name);
@@ -169,6 +183,7 @@ export class Lobby {
   }
 
   join(client, code, name) {
+    if (this.closed) return undefined;
     if (client.room) return client.send({ t: 'error', msg: 'already in a room' });
     const key = typeof code === 'string' ? code.trim().toUpperCase() : '';
     if (!/^[A-Z]{4}$/.test(key)) return this.joinFailed(client, 'invalid room code');
