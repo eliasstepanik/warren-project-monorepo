@@ -36,7 +36,7 @@ const MIME = {
   '.ico': 'image/x-icon',
 };
 // Not served: server code, tests, dotfiles.
-const HIDDEN = /^(server|test|node_modules)$|^\./;
+const HIDDEN = /^(server|test|node_modules)$|^\./i;
 
 /** Printable-ASCII name of at most MAX_NAME characters. */
 export function sanitizeName(raw) {
