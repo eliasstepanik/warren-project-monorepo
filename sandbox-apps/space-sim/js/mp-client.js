@@ -98,7 +98,7 @@ export class MpClient {
       if (e.start <= j) found = e;
       else break;
     }
-    return found ? found.input : p[0].input;
+    return found ? found.input : NEUTRAL; // before the first input nothing was held
   }
 
   reconcile(mine, serverTime) {
