@@ -241,7 +241,10 @@ export class Lobby {
   }
 
   close() {
-    for (const room of this.rooms.values()) room.stop();
+    for (const room of this.rooms.values()) {
+      room.stop();
+      clearTimeout(room.expiry);
+    }
     this.rooms.clear();
   }
 }
