@@ -13,21 +13,26 @@ function seeded(seed) {
 
 function starfield(canvas) {
   const ctx = canvas.getContext('2d');
-  // Match the viewport's aspect ratio so the pixels stay square.
   const h = 120;
-  const w = Math.max(1, Math.round((h * window.innerWidth) / Math.max(1, window.innerHeight)));
-  canvas.width = w;
-  canvas.height = h;
-  const rnd = seeded(7);
-  const stars = [];
-  for (let i = 0; i < Math.round((w * h) / 140); i++) {
-    stars.push({
-      x: Math.floor(rnd() * w),
-      y: Math.floor(rnd() * h),
-      color: ['darkGrey', 'lavender', 'white', 'blue'][Math.floor(rnd() * 4)],
-      phase: rnd() * 6,
-    });
+  let w = 0;
+  let stars = [];
+  // Match the viewport's aspect ratio so the pixels stay square.
+  function build() {
+    w = Math.max(1, Math.round((h * window.innerWidth) / Math.max(1, window.innerHeight)));
+    canvas.width = w;
+    canvas.height = h;
+    const rnd = seeded(7);
+    stars = [];
+    for (let i = 0; i < Math.round((w * h) / 140); i++) {
+      stars.push({
+        x: Math.floor(rnd() * w),
+        y: Math.floor(rnd() * h),
+        color: ['darkGrey', 'lavender', 'white', 'blue'][Math.floor(rnd() * 4)],
+        phase: rnd() * 6,
+      });
+    }
   }
+  build();
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let timer = 0; // single pending timeout / rAF handle, cancelled before rescheduling
   let raf = 0;
