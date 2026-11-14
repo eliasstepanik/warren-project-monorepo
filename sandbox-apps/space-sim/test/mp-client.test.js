@@ -95,6 +95,7 @@ test('a small server-side correction is smoothed, a large one snaps', () => {
   const small = simulate({ ticks: 400, script, perturb: nudge(3, 200) });
   let maxStep = 0;
   for (let c = 1; c < 400; c++) {
+    if (!small.shown[c - 1]) continue; // no prediction before the first snapshot
     maxStep = Math.max(maxStep, Math.hypot(small.shown[c].x - small.shown[c - 1].x, small.shown[c].y - small.shown[c - 1].y));
   }
   assert.ok(maxStep < 1, `smoothed step ${maxStep}`);
