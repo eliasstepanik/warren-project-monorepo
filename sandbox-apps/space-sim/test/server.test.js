@@ -3,7 +3,12 @@ import assert from 'node:assert/strict';
 import http from 'node:http';
 import net from 'node:net';
 import { randomBytes } from 'node:crypto';
-import { createGameServer, Lobby, sanitizeName, MAX_PLAYERS } from '../server/server.js';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import {
+  createGameServer, Lobby, sanitizeName, resolveStatic, MAX_PLAYERS,
+} from '../server/server.js';
 import { acceptKey, encodeFrame, decodeFrame, OP } from '../server/ws.js';
 
 /** Start a server on an ephemeral port. Returns { port, lobby, close }. */
