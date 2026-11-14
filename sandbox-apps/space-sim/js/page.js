@@ -64,7 +64,9 @@ function starfield(canvas) {
     if (!document.hidden) schedule(0);
   });
   schedule(0);
-}(canvas, text) {
+}
+
+function title(canvas, text) {
   const ctx = canvas.getContext('2d');
   const scale = 2;
   canvas.width = textWidth(text, scale) + 4;
