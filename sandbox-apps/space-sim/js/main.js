@@ -42,7 +42,13 @@ export function start(canvas) {
     const ps = getComputedStyle(parent);
     const cs = getComputedStyle(canvas);
     const inner = parent.clientWidth - parseFloat(ps.paddingLeft) - parseFloat(ps.paddingRight);
-    const avail = inner - parseFloat(cs.borderLeftWidth) - parseFloat(cs.borderRightWidth);
+    let avail = inner - parseFloat(cs.borderLeftWidth) - parseFloat(cs.borderRightWidth);
+    if (document.body.classList.contains('immersive')) {
+      // The viewport has a fixed height, so the width alone may be too generous.
+      const innerH = parent.clientHeight - parseFloat(ps.paddingTop) - parseFloat(ps.paddingBottom);
+      const availH = innerH - parseFloat(cs.borderTopWidth) - parseFloat(cs.borderBottomWidth);
+      avail = Math.min(avail, (availH * W) / H);
+    }
     if (!(avail >= MIN_INTEGER_WIDTH)) {
       canvas.classList.add('fluid');
       canvas.style.width = '';
