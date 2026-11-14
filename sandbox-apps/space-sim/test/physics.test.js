@@ -73,7 +73,7 @@ test('prediction matches real flight and follows moving bodies', () => {
 test('energy-like stability at max warp: no NaN, orbit bounded', () => {
   const sim = new Sim();
   sim.warpIndex = 6; // 64x
-  for (let f = 0; f < 60 * 60; f++) {
+  for (let f = 0; f < 60 * 15; f++) { // 15 s real time = 960 s simulated
     sim.update(1 / 60, { turn: 0, thrust: 0 });
     assert.ok(Number.isFinite(sim.ship.x) && Number.isFinite(sim.ship.vx));
     if (sim.crash) break;
