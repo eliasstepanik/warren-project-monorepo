@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  BODIES, HOME, STEP, positionsAt, stepState, circularOrbit, predict, solveKepler,
+  BODIES, HOME, STEP, positionsAt, stepState, circularOrbit, predict, solveKepler, bodyVelocity,
 } from '../js/physics.js';
 import { Sim } from '../js/sim.js';
 
