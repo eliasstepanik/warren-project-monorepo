@@ -119,14 +119,14 @@ function drawShip(ctx, sim, cam) {
   };
   if (sim.thrusting > 0) {
     const len = 2 + ((performance.now() / 60) & 1);
-    for (let k = 0; k < len + 1; k++) plot(-3 - k, 0, k < 2 ? 'yellow' : 'orange');
-    plot(-3, 1, 'orange');
-    plot(-3, -1, 'orange');
+    for (let k = 0; k < len; k++) plot(-2 - k, 0, k < 2 ? 'yellow' : 'orange');
+    plot(-2, 1, 'orange');
+    plot(-2, -1, 'orange');
   } else if (sim.thrusting < 0) {
-    plot(3, 1, 'blue');
-    plot(3, -1, 'blue');
-    plot(4, 1, 'white');
-    plot(4, -1, 'white');
+    plot(2, 1, 'blue');
+    plot(2, -1, 'blue');
+    plot(3, 1, 'white');
+    plot(3, -1, 'white');
   }
   for (const [x, y] of SHIP_SHAPE) plot(x, y, x > 1 ? 'white' : y === 0 ? 'lightGrey' : 'blue');
   plot(2, 0, 'red');
