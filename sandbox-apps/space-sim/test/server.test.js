@@ -331,6 +331,7 @@ test('silent clients are dropped after the idle timeout', async () => {
     await c.next((m) => m.t === 'welcome');
     await c.closed;
     assert.equal(c.closeCode, 1001);
+    for (let i = 0; i < 50 && s.lobby.rooms.size; i++) await new Promise((resolve) => setTimeout(resolve, 20));
     assert.equal(s.lobby.rooms.size, 0);
   } finally {
     await s.close();
