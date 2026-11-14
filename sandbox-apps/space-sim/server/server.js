@@ -139,6 +139,9 @@ export function allow(client, name, rate, now = performance.now()) {
 export class Lobby {
   constructor(options = {}) {
     this.options = options;
+    this.maxRooms = options.maxRooms ?? MAX_ROOMS;
+    this.graceMs = options.graceMs ?? ROOM_GRACE_MS;
+    this.maxJoinFails = options.maxJoinFails ?? MAX_JOIN_FAILS;
     this.rooms = new Map();
   }
 
@@ -152,19 +155,27 @@ export class Lobby {
 
   create(client, name) {
     if (client.room) return client.send({ t: 'error', msg: 'already in a room' });
+    if (this.rooms.size >= this.maxRooms) return client.send({ t: 'error', msg: 'server full' });
     const room = new Room(this.newCode(), this.options);
     this.rooms.set(room.code, room);
-    this.enter(client, room, name);
+    return this.enter(client, room, name);
+  }
+
+  /** A failed join. After maxJoinFails of them the connection is closed (code guessing). */
+  joinFailed(client, msg) {
+    client.send({ t: 'error', msg });
+    client.fails = (client.fails ?? 0) + 1;
+    if (client.fails >= this.maxJoinFails) client.close?.(1008, 'too many failed joins');
   }
 
   join(client, code, name) {
     if (client.room) return client.send({ t: 'error', msg: 'already in a room' });
     const key = typeof code === 'string' ? code.trim().toUpperCase() : '';
-    if (!/^[A-Z]{4}$/.test(key)) return client.send({ t: 'error', msg: 'invalid room code' });
+    if (!/^[A-Z]{4}$/.test(key)) return this.joinFailed(client, 'invalid room code');
     const room = this.rooms.get(key);
-    if (!room) return client.send({ t: 'error', msg: `room ${key} not found` });
-    if (room.full) return client.send({ t: 'error', msg: `room ${key} is full` });
-    this.enter(client, room, name);
+    if (!room) return this.joinFailed(client, `room ${key} not found`);
+    if (room.full) return this.joinFailed(client, `room ${key} is full`);
+    return this.enter(client, room, name);
   }
 
   enter(client, room, name) {
@@ -174,22 +185,34 @@ export class Lobby {
     room.broadcast({ t: 'players', list: room.list() });
   }
 
-  /** Remove a client from its room; empty rooms are deleted. */
+  /**
+   * Remove a client from its room. An empty room stops simulating at once and
+   * is deleted after the grace period, so a player who reloads the page (the
+   * old socket closes while the new one joins) can come back to it.
+   */
   leave(client) {
     const room = client.room;
     if (!room) return;
     room.remove(client);
-    if (room.players.size === 0) {
-      room.stop();
-      this.rooms.delete(room.code);
-    } else {
+    if (room.players.size > 0) {
       room.broadcast({ t: 'players', list: room.list() });
+      return;
+    }
+    room.stop();
+    const drop = () => {
+      if (this.rooms.get(room.code) === room && room.players.size === 0) this.rooms.delete(room.code);
+    };
+    if (this.graceMs <= 0) drop();
+    else {
+      room.expiry = setTimeout(drop, this.graceMs);
+      room.expiry.unref();
     }
   }
 
   /** Handle one raw text message. Never throws. */
   handle(client, text) {
     try {
+      if (!allow(client, 'any', MESSAGE_RATE)) return undefined; // flooding: drop
       const msg = JSON.parse(text);
       if (!msg || typeof msg !== 'object' || typeof msg.t !== 'string') {
         return client.send({ t: 'error', msg: 'bad message' });
@@ -197,12 +220,7 @@ export class Lobby {
       switch (msg.t) {
         case 'input': {
           if (!client.room) return client.send({ t: 'error', msg: 'not in a room' });
-          const now = performance.now();
-          client.tokens = Math.min(INPUT_RATE, (client.tokens ?? INPUT_RATE)
-            + ((now - (client.tokensAt ?? now)) / 1000) * INPUT_RATE);
-          client.tokensAt = now;
-          if (client.tokens < 1) return undefined; // over the rate limit: drop
-          client.tokens--;
+          if (!allow(client, 'input', INPUT_RATE)) return undefined; // over the rate limit: drop
           return client.room.sim.setInput(client.id, msg);
         }
         case 'ping':
