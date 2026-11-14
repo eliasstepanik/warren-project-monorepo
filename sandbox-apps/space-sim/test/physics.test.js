@@ -86,8 +86,9 @@ test('flying into a planet crashes; reset restores a live ship', () => {
   const sim = new Sim();
   // Cancel velocity relative to the planet so the ship falls straight in.
   const pos = positionsAt(0)[HOME];
-  sim.ship.vx = 0;
-  sim.ship.vy = 0;
+  const bv = bodyVelocity(HOME, 0);
+  sim.ship.vx = bv.x;
+  sim.ship.vy = bv.y;
   sim.ship.x = pos.x;
   sim.ship.y = pos.y - 30;
   for (let f = 0; f < 60 * 10 && !sim.crash; f++) sim.update(1 / 60, { turn: 0, thrust: 0 });
