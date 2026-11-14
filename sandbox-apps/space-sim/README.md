@@ -11,9 +11,17 @@ The code uses ES modules, so it must be served over HTTP. Opening
 
 ```sh
 cd sandbox-apps/space-sim
-python3 -m http.server 8000
+python3 -m http.server 8000     # single player only, any static server works
 # open http://localhost:8000/
+
+node server/server.js           # static files + multiplayer, PORT=8080 by default
+# open http://localhost:8080/
 ```
+
+The multiplayer server (`server/`, no dependencies) is documented in
+`server/PROTOCOL.md`; the shared combat simulation is `js/mp-sim.js`. The
+per-IP connection cap uses the raw socket address, so behind a reverse proxy
+all users share it (see `MAX_PER_IP` there).
 
 ## Controls
 
@@ -29,10 +37,38 @@ button.
 | `+` `-` / mouse wheel | Zoom |
 | `P` | Pause / resume |
 | `R` | Reset |
+| `Space` / `F` | Fire (multiplayer only) |
+| `Tab` (hold) | Scoreboard (multiplayer only) |
 
 Engines are disabled while time warp is above 1x. The game pauses while the
 tab is hidden or the canvas is scrolled off-screen. A keyboard is required;
 there are no touch controls.
+
+## Multiplayer
+
+Up to 4 pilots fly in the same solar system and shoot each other. It needs the
+Node server (`npm start`, port 8080 by default, `PORT=...` to change); with a
+static server the Multiplayer section just says so and singleplayer is
+unaffected.
+
+1. Open `http://localhost:8080/`, enter a name (saved in localStorage) and press
+   **Create room**, or type a 4-letter code and press **Join**.
+2. Share the `?room=CODE` link shown in the lobby. Opening it pre-fills the code
+   and joins at once if a name is already saved.
+3. Fly with the usual keys, fire with `Space` or `F`, hold `Tab` for the
+   scoreboard. There is no time warp, pause or reset online (warp keys show
+   "NO WARP IN MP"). A destroyed ship respawns after 3 s, invulnerable for 2 s.
+4. **Leave / back to singleplayer** closes the connection. If the server drops
+   you the screen says DISCONNECTED until you leave.
+
+While the tab is hidden the connection stays up (the server pings every 10 s,
+the browser answers by itself, and any received frame counts as activity before
+the 30 s idle timeout) but rendering stops and a neutral input is sent so the
+ship stops thrusting and firing. The server limits are in `server/PROTOCOL.md`.
+
+Code: `js/net.js` (WebSocket), `js/mp-client.js` (prediction, interpolation,
+feed, scoreboard), `js/render-mp.js` (drawing), `js/lobby.js` (lobby UI), and
+`game.startMultiplayer(net, client)` / `game.stopMultiplayer()` in `js/main.js`.
 
 ## How it works
 
@@ -56,6 +92,6 @@ over a very long time the orbit drifts.
 Needs Node 22 or newer. There are no packages to install.
 
 ```sh
-for f in js/*.js test/*.js; do node --check "$f" || exit 1; done   # syntax check
-node --test            # physics and render sanity tests
+for f in js/*.js server/*.js test/*.js; do node --check "$f" || exit 1; done   # syntax check
+node --test            # physics, render, combat sim, websocket and server tests
 ```

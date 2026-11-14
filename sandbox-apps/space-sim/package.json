@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Lone Orbit: a tiny pixel-art 2D orbit sim (static site, no dependencies)",
+  "description": "Lone Orbit: a tiny pixel-art 2D orbit sim (static client plus a zero-dependency Node multiplayer server)",
   "scripts": {
-    "start": "python3 -m http.server 8000",
-    "check": "for f in js/*.js test/*.js; do node --check \"$f\" || exit 1; done",
+    "start": "node server/server.js",
+    "check": "for f in js/*.js server/*.js test/*.js; do node --check \"$f\" || exit 1; done",
     "test": "node --test"
   },
   "engines": {

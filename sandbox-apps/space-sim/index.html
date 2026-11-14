@@ -31,6 +31,35 @@
       <noscript><p class="note">This demo needs JavaScript.</p></noscript>
     </section>
 
+    <section id="mp" class="section" aria-labelledby="mp-h">
+      <h2 id="mp-h">MULTIPLAYER</h2>
+      <div class="panel lobby">
+        <p class="note first">Up to 4 pilots, orbital combat. Needs the Node server: <code>npm start</code>.</p>
+        <div class="row">
+          <label for="mp-name">NAME</label>
+          <input id="mp-name" class="field" type="text" maxlength="12" autocomplete="nickname" spellcheck="false" placeholder="PILOT">
+          <button id="mp-create" class="btn small" type="button">CREATE ROOM</button>
+        </div>
+        <div class="row">
+          <label for="mp-code">ROOM</label>
+          <input id="mp-code" class="field code" type="text" maxlength="4" autocomplete="off" spellcheck="false" placeholder="ABCD">
+          <button id="mp-join" class="btn small" type="button">JOIN</button>
+        </div>
+        <p id="mp-status" class="status" role="status" aria-live="polite">Not connected.</p>
+        <div id="mp-room" hidden>
+          <ul id="mp-players" class="players" aria-label="Players"></ul>
+          <div class="row">
+            <label for="mp-share">LINK</label>
+            <input id="mp-share" class="field wide" type="text" readonly>
+            <button id="mp-copy" class="btn small" type="button">COPY</button>
+          </div>
+        </div>
+        <div class="row">
+          <button id="mp-leave" class="btn small" type="button" hidden>LEAVE / BACK TO SINGLEPLAYER</button>
+        </div>
+      </div>
+    </section>
+
     <section class="section" aria-labelledby="feat-h">
       <h2 id="feat-h">FEATURES</h2>
       <ul class="cards">
@@ -55,7 +84,7 @@
 
     <section class="section" aria-labelledby="ctl-h">
       <h2 id="ctl-h">CONTROLS</h2>
-      <p id="ctl-desc" class="note">Keys only work while the game screen is focused. A keyboard is needed: the demo has no touch controls. W A S D or the arrow keys fly, comma and period change time warp, plus and minus zoom, P pauses, R resets.</p>
+      <p id="ctl-desc" class="note">Keys only work while the game screen is focused. A keyboard is needed: the demo has no touch controls. W A S D or the arrow keys fly, comma and period change time warp, plus and minus zoom, P pauses, R resets. In multiplayer, Space or F fires, hold Tab for the scoreboard, and there is no time warp, pause or reset.</p>
       <table class="keys">
         <tbody>
           <tr><th scope="row"><kbd>A</kbd> <kbd>D</kbd> / <kbd>&larr;</kbd> <kbd>&rarr;</kbd></th><td>Rotate</td></tr>
@@ -65,6 +94,8 @@
           <tr><th scope="row"><kbd>+</kbd> <kbd>-</kbd> / wheel</th><td>Zoom</td></tr>
           <tr><th scope="row"><kbd>P</kbd></th><td>Pause / resume</td></tr>
           <tr><th scope="row"><kbd>R</kbd></th><td>Reset</td></tr>
+          <tr><th scope="row"><kbd>Space</kbd> / <kbd>F</kbd></th><td>Fire (multiplayer)</td></tr>
+          <tr><th scope="row"><kbd>Tab</kbd> (hold)</th><td>Scoreboard (multiplayer)</td></tr>
         </tbody>
       </table>
       <p class="note">Tip: burn along your heading to raise the far side of your orbit. Burn against it to lower it.</p>

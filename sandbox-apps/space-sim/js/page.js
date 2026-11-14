@@ -2,6 +2,7 @@
 import { PAL } from './palette.js';
 import { drawText, textWidth } from './font.js';
 import { start } from './main.js';
+import { initLobby } from './lobby.js';
 
 function seeded(seed) {
   let s = seed >>> 0;
@@ -88,6 +89,8 @@ starfield(document.getElementById('bg'));
 title(document.getElementById('title-art'), 'LONE ORBIT');
 
 const game = start(document.getElementById('game'));
+
+initLobby(game);
 
 document.getElementById('play').addEventListener('click', (e) => {
   e.preventDefault();
