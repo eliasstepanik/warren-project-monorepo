@@ -257,6 +257,7 @@ export function acceptUpgrade(req, socket, head, options) {
     && Buffer.from(key, 'base64').length === 16;
   if (!ok) {
     socket.end('HTTP/1.1 400 Bad Request\r\nSec-WebSocket-Version: 13\r\nConnection: close\r\nContent-Length: 0\r\n\r\n');
+    setTimeout(() => socket.destroy(), 1000).unref();
     return null;
   }
   socket.write(
