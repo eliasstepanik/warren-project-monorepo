@@ -89,6 +89,8 @@ title(document.getElementById('title-art'), 'LONE ORBIT');
 
 const game = start(document.getElementById('game'));
 
+initLobby(game);
+
 document.getElementById('play').addEventListener('click', (e) => {
   e.preventDefault();
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
