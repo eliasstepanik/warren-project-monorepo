@@ -34,7 +34,7 @@ const HIDDEN = /^(server|test|node_modules)$|^\./;
 
 /** Printable-ASCII name of at most MAX_NAME characters. */
 export function sanitizeName(raw) {
-  const s = String(raw ?? '').replace(/[^A-Za-z0-9 _.-]/g, '').trim().slice(0, MAX_NAME).trim();
+  const s = (typeof raw === 'string' ? raw : '').replace(/[^A-Za-z0-9 _.-]/g, '').trim().slice(0, MAX_NAME).trim();
   return s || 'PILOT';
 }
 
