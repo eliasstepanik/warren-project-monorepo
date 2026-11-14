@@ -13,7 +13,13 @@ export const MAX_NAME = 12;
 export const MAX_PLAYERS = MAX_SHIPS;
 export const SNAPSHOT_EVERY = 6; // steps between snapshots: 120 / 6 = 20 Hz
 export const INPUT_RATE = 60; // inputs per second per client
-export const IDLE_MS = 10000; // a client silent for this long is dropped
+export const MESSAGE_RATE = 100; // messages per second per client, all types (inputs: INPUT_RATE)
+export const IDLE_MS = 30000; // a client silent for this long is dropped; the server pings at a third of it
+export const MAX_CONNECTIONS = 256; // WebSocket connections; more are refused with 503
+export const MAX_ROOMS = 64; // each room runs a 120 Hz loop; `create` fails with 'server full'
+export const MAX_PER_IP = 16; // connections per remote address; more are refused with 429
+export const ROOM_GRACE_MS = 10000; // an emptied room survives this long (page reloads, rejoin)
+export const MAX_JOIN_FAILS = 5; // failed joins per connection before it is closed
 const TICK_MS = 8; // loop timer period; steps are taken at STEP regardless
 const MAX_CATCHUP = 0.1; // s of simulation time a single loop run may catch up
 
