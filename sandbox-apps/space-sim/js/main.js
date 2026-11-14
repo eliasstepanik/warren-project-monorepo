@@ -12,7 +12,9 @@ const WARP_DOWN = new Set([',', '<', 'q']);
 const WARP_UP = new Set(['.', '>', 'e']);
 const ZOOM_IN = new Set(['+', '=']);
 const ZOOM_OUT = new Set(['-', '_']);
-const ACTION_KEYS = new Set([...WARP_DOWN, ...WARP_UP, ...ZOOM_IN, ...ZOOM_OUT, 'r', 'p']);
+const ACTION_KEYS = new Set([...WARP_DOWN, ...WARP_UP, ...ZOOM_IN, ...ZOOM_OUT, 'r', 'p', 'f', 'f11', 'b']);
+
+const TOAST_MS = 1000;
 
 const WHEEL_THRESHOLD = 100; // accumulated deltaY per zoom level
 const MIN_INTEGER_WIDTH = 320; // below this, fall back to fluid scaling
