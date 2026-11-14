@@ -11,9 +11,15 @@ The code uses ES modules, so it must be served over HTTP. Opening
 
 ```sh
 cd sandbox-apps/space-sim
-python3 -m http.server 8000
+python3 -m http.server 8000     # single player only, any static server works
 # open http://localhost:8000/
+
+node server/server.js           # static files + multiplayer, PORT=8080 by default
+# open http://localhost:8080/
 ```
+
+The multiplayer server (`server/`, no dependencies) is documented in
+`server/PROTOCOL.md`; the shared combat simulation is `js/mp-sim.js`.
 
 ## Controls
 
