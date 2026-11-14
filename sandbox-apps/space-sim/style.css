@@ -1,0 +1,171 @@
+:root {
+  --night: #0b0b1e;
+  --dark-blue: #1d2b53;
+  --purple: #7e2553;
+  --grey: #5f574f;
+  --light: #c2c3c7;
+  --white: #fff1e8;
+  --orange: #ffa300;
+  --yellow: #ffec27;
+  --green: #00e436;
+  --blue: #29adff;
+  --lavender: #83769c;
+  --font: "Courier New", Courier, ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: auto; }
+
+body {
+  margin: 0;
+  background: var(--night);
+  color: var(--white);
+  font: bold 16px/1.5 var(--font);
+  image-rendering: pixelated;
+}
+
+canvas { image-rendering: pixelated; image-rendering: crisp-edges; image-rendering: pixelated; }
+
+#bg {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- hero ---------- */
+.hero {
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 16px;
+}
+
+.tag { color: var(--blue); letter-spacing: 4px; margin: 0; }
+
+h1 { margin: 16px 0; line-height: 0; }
+#title-art { width: min(92vw, 720px); height: auto; }
+
+.lead { max-width: 34em; color: var(--light); margin: 0 0 32px; }
+
+.btn {
+  display: inline-block;
+  padding: 12px 32px;
+  font: inherit;
+  font-size: 24px;
+  letter-spacing: 4px;
+  color: var(--night);
+  background: var(--yellow);
+  text-decoration: none;
+  border: 4px solid var(--white);
+  box-shadow: 4px 4px 0 var(--purple), inset -4px -4px 0 var(--orange);
+  cursor: pointer;
+}
+.btn:hover, .btn:focus-visible { background: var(--white); outline: 4px solid var(--blue); outline-offset: 4px; }
+.btn:active { transform: translate(4px, 4px); box-shadow: none; }
+
+/* ---------- sections ---------- */
+main { max-width: 1000px; margin: 0 auto; padding: 0 16px; }
+
+.section { margin: 0 0 64px; }
+
+h2 {
+  display: inline-block;
+  margin: 0 0 24px;
+  padding: 4px 12px;
+  font-size: 20px;
+  letter-spacing: 4px;
+  color: var(--yellow);
+  background: var(--night);
+  border: 4px solid var(--lavender);
+}
+
+.note { color: var(--lavender); margin: 16px 0 0; }
+
+/* The game frame: chunky bevelled border around the integer-scaled canvas. */
+.screen {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background: var(--dark-blue);
+  border: 4px solid var(--white);
+  box-shadow: 8px 8px 0 var(--purple);
+  text-align: center;
+  line-height: 0;
+}
+#game {
+  display: inline-block;
+  max-width: 100%;
+  background: var(--night);
+  border: 4px solid var(--night);
+  cursor: crosshair;
+}
+#game:focus { outline: none; border-color: var(--green); }
+
+.cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 24px;
+}
+.card {
+  padding: 16px;
+  background: var(--night);
+  border: 4px solid var(--lavender);
+  box-shadow: 6px 6px 0 var(--dark-blue);
+}
+.card h3 { margin: 0 0 8px; color: var(--orange); font-size: 16px; letter-spacing: 2px; }
+.card p { margin: 0; color: var(--light); }
+
+.keys {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+  background: transparent;
+}
+.keys th, .keys td { padding: 8px 12px; background: var(--night); text-align: left; }
+.keys th { width: 40%; border: 4px solid var(--lavender); border-right: 0; font-weight: bold; color: var(--white); }
+.keys td { border: 4px solid var(--lavender); border-left: 0; color: var(--light); }
+
+kbd {
+  display: inline-block;
+  min-width: 28px;
+  padding: 0 6px;
+  text-align: center;
+  font: inherit;
+  color: var(--night);
+  background: var(--light);
+  border: 2px solid var(--white);
+  box-shadow: 2px 2px 0 var(--grey);
+}
+
+.footer {
+  padding: 24px 16px 40px;
+  text-align: center;
+  color: var(--lavender);
+  border-top: 4px solid var(--dark-blue);
+  background: var(--night);
+}
+.footer p { margin: 0; }
+
+@media (max-width: 600px) {
+  .keys th, .keys td { display: block; width: auto; border: 4px solid var(--lavender); }
+  .keys th { border-bottom: 0; }
+  .keys td { border-top: 0; margin-bottom: 8px; }
+}
