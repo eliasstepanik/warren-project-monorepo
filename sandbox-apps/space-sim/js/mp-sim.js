@@ -116,7 +116,7 @@ export class MpSim {
       }
       if (best === s && clear >= SPAWN_CLEARANCE) break;
     }
-    if (!best) best = circularOrbit(PLANETS[0], BODIES[PLANETS[0]].radius + SPAWN_ALTITUDE, this.t, 0);
+    if (!best) best = circularOrbit(PLANETS[0], BODIES[PLANETS[0]].radius + SPAWN_ALTITUDE, this.time, 0);
     Object.assign(ship, {
       x: best.x, y: best.y, vx: best.vx, vy: best.vy, angle: best.angle,
       px: best.x, py: best.y,
