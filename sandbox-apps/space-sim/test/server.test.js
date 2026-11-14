@@ -7,7 +7,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  createGameServer, Lobby, sanitizeName, resolveStatic, MAX_PLAYERS,
+  createGameServer, Lobby, sanitizeName, resolveStatic, MAX_PLAYERS, MESSAGE_RATE,
 } from '../server/server.js';
 import { acceptKey, encodeFrame, decodeFrame, OP } from '../server/ws.js';
 
