@@ -292,7 +292,7 @@ export function createGameServer({ root = ROOT, idleMs = IDLE_MS, loop = true } 
 
   function close() {
     clearInterval(sweep);
-    for (const { conn } of clients) conn.terminate();
+    for (const conn of clients) conn.terminate();
     lobby.close();
     return new Promise((resolve) => {
       server.close(() => resolve());
