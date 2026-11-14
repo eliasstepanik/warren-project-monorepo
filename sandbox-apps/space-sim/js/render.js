@@ -128,7 +128,7 @@ function drawShip(ctx, sim, cam) {
     plot(3, 1, 'white');
     plot(3, -1, 'white');
   }
-  for (const [x, y] of SHIP_SHAPE) plot(x, y, x > 1 ? 'white' : y === 0 ? 'lightGrey' : 'blue');
+  for (const [x, y] of SHIP_SHAPE) plot(x, y, y === 0 ? 'lightGrey' : 'blue');
   plot(2, 0, 'red');
 }
 
