@@ -25,7 +25,7 @@ body {
   image-rendering: pixelated;
 }
 
-canvas { image-rendering: pixelated; image-rendering: crisp-edges; image-rendering: pixelated; }
+canvas { image-rendering: crisp-edges; image-rendering: pixelated; }
 
 #bg {
   position: fixed;
