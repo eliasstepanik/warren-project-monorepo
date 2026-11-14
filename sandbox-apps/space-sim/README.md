@@ -35,6 +35,8 @@ button.
 | `+` `-` / mouse wheel | Zoom |
 | `P` | Pause / resume |
 | `R` | Reset |
+| `Space` / `F` | Fire (multiplayer only) |
+| `Tab` (hold) | Scoreboard (multiplayer only) |
 
 Engines are disabled while time warp is above 1x. The game pauses while the
 tab is hidden or the canvas is scrolled off-screen. A keyboard is required;
