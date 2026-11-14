@@ -233,9 +233,10 @@ function drawHud(ctx, sim, ui) {
     const blink = Math.floor(performance.now() / 500) % 2 === 0;
     drawText(ctx, m, Math.round((W - textWidth(m, 2)) / 2), 60, PAL.red, 2);
     if (blink) drawText(ctx, m2, Math.round((W - textWidth(m2)) / 2), 76, PAL.white);
-  } else if (ui.paused) {
+  }
+  if (ui.paused) {
     const m = 'PAUSED';
-    drawText(ctx, m, Math.round((W - textWidth(m, 2)) / 2), 60, PAL.yellow, 2);
+    drawText(ctx, m, Math.round((W - textWidth(m, 2)) / 2), sim.crash ? 92 : 60, PAL.yellow, 2);
   }
   if (!ui.focused) {
     const m = 'CLICK TO FOCUS';
