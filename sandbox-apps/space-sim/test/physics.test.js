@@ -32,7 +32,7 @@ test('planets stay on their ellipses (distance within [a(1-e), a(1+e)])', () => 
 });
 
 test('starting circular orbit stays roughly circular for several orbits', () => {
-  const r0 = 26;
+  const r0 = 24;
   const ship = circularOrbit(HOME, r0, 0, -Math.PI / 2);
   const period = 2 * Math.PI * Math.sqrt((r0 ** 3) / BODIES[HOME].gm);
   const steps = Math.round((period * 5) / STEP);
