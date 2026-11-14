@@ -125,18 +125,21 @@ export function dominantBody(x, y, pos) {
 /**
  * Index of the first body whose disc the segment (x0, y0)-(x1, y1) touches, or
  * -1. Testing the whole segment, not just its end, keeps fast ships from
- * tunnelling through small bodies such as MOTE.
+ * tunnelling through small bodies such as MOTE. `pos0` and `pos1` are the body
+ * positions at the start and end of the step; the segment is tested in each
+ * body's frame, from (x0 - pos0) to (x1 - pos1), so body motion is included.
+ * `pos1` defaults to `pos0` (stationary bodies).
  */
-export function segmentCollision(x0, y0, x1, y1, pos) {
-  const sx = x1 - x0;
-  const sy = y1 - y0;
-  const len2 = sx * sx + sy * sy;
+export function segmentCollision(x0, y0, x1, y1, pos0, pos1 = pos0) {
   for (let i = 0; i < BODIES.length; i++) {
-    const dx = pos[i].x - x0;
-    const dy = pos[i].y - y0;
-    const u = len2 > 0 ? Math.max(0, Math.min(1, (dx * sx + dy * sy) / len2)) : 0;
-    const cx = dx - u * sx;
-    const cy = dy - u * sy;
+    const ax = x0 - pos0[i].x;
+    const ay = y0 - pos0[i].y;
+    const sx = x1 - pos1[i].x - ax;
+    const sy = y1 - pos1[i].y - ay;
+    const len2 = sx * sx + sy * sy;
+    const u = len2 > 0 ? Math.max(0, Math.min(1, -(ax * sx + ay * sy) / len2)) : 0;
+    const cx = ax + u * sx;
+    const cy = ay + u * sy;
     if (cx * cx + cy * cy < BODIES[i].radius * BODIES[i].radius) return i;
   }
   return -1;
