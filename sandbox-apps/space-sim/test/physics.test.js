@@ -132,8 +132,8 @@ test('prediction detects a collision with MOTE that endpoint checks would miss',
   const pos = positionsAt(t);
   const mote = BODIES.findIndex((b) => b.name === 'MOTE');
   const bv = bodyVelocity(mote, t);
-  // Fly through MOTE's centre at 400 du/s relative to it: 8 du per 0.02 s step.
-  const ship = { x: pos[mote].x - 40, y: pos[mote].y, vx: bv.x + 400, vy: bv.y };
+  // Fly through MOTE's centre at 400 du/s relative to it: 8 du per 0.02 s step (endpoints land at -4 and +4).
+  const ship = { x: pos[mote].x - 44, y: pos[mote].y, vx: bv.x + 400, vy: bv.y };
   const p = predict(ship, t, 20, 0.02, 0.02);
   assert.equal(p.hit, mote);
 });
