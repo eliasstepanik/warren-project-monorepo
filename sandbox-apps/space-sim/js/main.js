@@ -168,6 +168,19 @@ export function start(canvas) {
       });
     }
     render(ctx, sim, ui);
+    drawToast(now);
+  }
+
+  /** Mode message, centred near the top; fades out over its last half second. */
+  function drawToast(now) {
+    const t = ui.toast;
+    if (!t || now >= t.until) return;
+    ctx.globalAlpha = Math.min(1, (t.until - now) / (TOAST_MS / 2));
+    const x = Math.round((W - textWidth(t.text, 2)) / 2);
+    ctx.fillStyle = PAL.night;
+    ctx.fillRect(x - 4, 20, textWidth(t.text, 2) + 8, 16);
+    drawText(ctx, t.text, x, 24, PAL.yellow, 2);
+    ctx.globalAlpha = 1;
   }
 
   // Run the loop only while the canvas is on screen and the tab is visible;
