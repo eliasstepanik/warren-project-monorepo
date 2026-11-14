@@ -514,13 +514,12 @@ test('any received frame, a WebSocket pong included, keeps a quiet client alive;
   try {
     c.send({ t: 'create', name: 'Quiet' });
     await c.next((m) => m.t === 'welcome');
-    c.socket.on('data', () => {}); // keep reading
     let pings = 0;
-    const origOnData = c.onData.bind(c);
-    c.onData = (d) => { if (d.includes(Buffer.from([0x89, 0x00]))) pings++; origOnData(d); };
-    c.socket.removeAllListeners('data');
-    c.socket.on('data', (d) => c.onData(d));
-    for (let i = 0; i < 10; i++) { // 1 s, over three idle timeouts
+    const onData = c.onData.bind(c);
+    c.onData = (d) => {
+      if (d.includes(Buffer.from([0x89, 0x00]))) pings++; // an unmasked, empty PING frame
+      onData(d);
+    }; (let i = 0; i < 10; i++) { // 1 s, over three idle timeouts
       await sleep(100);
       c.socket.write(encodeFrame(OP.PONG, '', { mask: true }));
     }
