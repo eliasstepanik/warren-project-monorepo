@@ -112,21 +112,36 @@ test('GET / serves index.html; unknown files give 404', async () => {
 });
 
 test('path traversal is blocked', async () => {
-  const s = await start();
+  const base = mkdtempSync(join(tmpdir(), 'space-sim-'));
+  const root = join(base, 'root');
+  mkdirSync(join(root, 'server'), { recursive: true });
+  writeFileSync(join(base, 'secret.txt'), 'TOP-SECRET');
+  writeFileSync(join(root, 'index.html'), '<html>ok</html>');
+  writeFileSync(join(root, 'server', 'x.js'), 'SERVER-CODE');
+  writeFileSync(join(root, '.env'), 'DOTFILE');
+  const s = await start({ root });
   try {
     for (const p of [
-      '/../package.json', '/%2e%2e/package.json', '/js/../../package.json', '/..%2fpackage.json',
-      '/%2e%2e%2f%2e%2e%2fetc/passwd', '/js/%2e%2e/%2e%2e/package.json', '/%00', '/..\\package.json',
-      '/server/server.js', '/test/ws.test.js',
+      '/../secret.txt', '/%2e%2e/secret.txt', '/a/../../secret.txt', '/..%2fsecret.txt',
+      '/%2e%2e%2fsecret.txt', '/%2e%2e/%2e%2e/secret.txt', '/%00', '/..\\secret.txt',
+      '/server/x.js', '/.env', '/%2eenv',
     ]) {
       const r = await get(s.port, p);
-      assert.equal(r.status, 404, p);
-      assert.doesNotMatch(r.body, /"name": "space-sim"|createGameServer/, p);
+      assert.doesNotMatch(r.body, /TOP-SECRET|SERVER-CODE|DOTFILE/, p);
+      assert.ok(r.status === 404 || r.status === 400, `${p} -> ${r.status}`);
     }
-    assert.equal((await get(s.port, '/package.json')).status, 200); // inside the root: allowed
+    assert.equal((await get(s.port, '/')).status, 200);
+    // The URL parser may collapse ".." before it reaches us; that must stay inside the root.
+    assert.equal((await get(s.port, '/../index.html')).body, '<html>ok</html>');
   } finally {
     await s.close();
+    rmSync(base, { recursive: true, force: true });
   }
+  // The resolver itself, with raw paths that bypass URL normalisation.
+  for (const p of ['/../secret.txt', '/a/../../x', '/%2e%2e/x', '/a\\..\\x', '/x%00', '/%']) {
+    assert.equal(resolveStatic(root, p), null, p);
+  }
+  assert.equal(resolveStatic(root, '/js/a.js'), join(root, 'js', 'a.js'));
 });
 
 test('WebSocket handshake answers 101 with the correct accept key', async () => {
