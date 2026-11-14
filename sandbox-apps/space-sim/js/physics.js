@@ -18,8 +18,8 @@ const SOFTENING = 0.01; // avoids a singularity at r = 0
 const DEFS = [
   { name: 'SOL', parent: -1, a: 0, e: 0, w: 0, m0: 0, gm: 90000, radius: 16, color: 'yellow', dark: 'orange' },
   { name: 'EMBER', parent: 0, a: 200, e: 0.04, w: 0.6, m0: 1.0, gm: 1500, radius: 7, color: 'orange', dark: 'brown' },
-  { name: 'TIDE', parent: 0, a: 400, e: 0.08, w: 2.2, m0: 3.4, gm: 5000, radius: 11, color: 'blue', dark: 'darkBlue' },
-  { name: 'MOTE', parent: 2, a: 64, e: 0.02, w: 1.0, m0: 0.5, gm: 60, radius: 3, color: 'lightGrey', dark: 'darkGrey' },
+  { name: 'TIDE', parent: 0, a: 400, e: 0.08, w: 2.2, m0: 3.4, gm: 8000, radius: 11, color: 'blue', dark: 'darkBlue' },
+  { name: 'MOTE', parent: 2, a: 64, e: 0.02, w: 1.0, m0: 0.5, gm: 25, radius: 3, color: 'lightGrey', dark: 'darkGrey' },
   { name: 'RIME', parent: 0, a: 640, e: 0.18, w: 4.4, m0: 5.2, gm: 2500, radius: 8, color: 'lavender', dark: 'darkPurple' },
 ];
 
