@@ -126,8 +126,9 @@ h2 {
   cursor: crosshair;
 }
 #game:focus, #game.focused { outline: none; border-color: var(--green); }
-/* Under 320px of room there is no whole-number scale: fill the width instead. */
-#game.fluid { box-sizing: border-box; width: 100%; height: auto; max-width: 100%; aspect-ratio: 16 / 9; }
+/* Under 320px of room there is no whole-number scale: fill the width instead.
+   Content-box sizing keeps the drawing area exactly 16:9 (width minus the two 4px borders). */
+#game.fluid { box-sizing: content-box; width: calc(100% - 8px); height: auto; max-width: 100%; aspect-ratio: auto; }
 
 .cards {
   list-style: none;
