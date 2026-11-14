@@ -155,28 +155,24 @@ export class MpSim {
       if (hit >= 0) this.kill(ship, events, { type: 'crash', id: ship.id, body: hit });
     }
 
-    const shots = [];
-    for (const p of this.projectiles) {
+    this.projectiles = this.projectiles.filter((p) => {
       p.px = p.x;
       p.py = p.y;
       p.age++;
-      if (stepState(p, t, STEP, 0, p.cache) >= 0 || p.age >= LIFE_TICKS) continue;
-      shots.push(p);
+      if (stepState(p, t, STEP, 0, p.cache) >= 0 || p.age >= LIFE_TICKS) return false;
       for (const ship of this.ships.values()) {
         if (!ship.alive || ship.invuln > 0) continue;
         if (ship.id === p.owner && p.age < GRACE_TICKS) continue;
-        // Ship and projectile both move: test in the ship's frame.
+        // Ship and projectile both move: test the segment in the ship's frame.
         const d = segmentDistance(p.px - ship.px, p.py - ship.py, p.x - ship.x, p.y - ship.y);
         if (d >= HIT_RADIUS) continue;
-        p.age = LIFE_TICKS;
-        shots.pop();
         const owner = this.ships.get(p.owner);
         if (owner && owner !== ship) owner.kills++;
         this.kill(ship, events, { type: 'kill', killer: p.owner, victim: ship.id });
-        break;
+        return false;
       }
-    }
-    this.projectiles = shots;
+      return true;
+    });
 
     for (const ship of this.ships.values()) {
       if (ship.alive) {
