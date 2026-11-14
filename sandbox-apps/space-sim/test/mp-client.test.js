@@ -189,7 +189,7 @@ test('kill feed formats events and expires lines after 4 s', () => {
   assert.equal(c.feed(3500)[0].at, 1000);
   assert.deepEqual(c.feed(1000 + FEED_LIFETIME - 1).length, 4);
   assert.deepEqual(c.feed(1000 + FEED_LIFETIME).map((l) => l.text), ['CY CRASHED', 'BO RESPAWNED', 'CY SELF-HIT']);
-  assert.equal(c.feed(2000 + FEED_LIFETIME + 10).length, 2 - 0 + 0 === 2 ? 2 : 0);
+  assert.equal(c.feed(2000 + FEED_LIFETIME + 10).length, 2);
   assert.equal(c.feed(10000).length, 0);
 });
 
