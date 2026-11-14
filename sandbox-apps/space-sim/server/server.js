@@ -54,10 +54,18 @@ export class Room {
     this.steps = 0;
     this.last = performance.now();
     this.timer = null;
-    if (loop) {
-      this.timer = setInterval(() => this.run(), TICK_MS);
-      this.timer.unref();
-    }
+    this.expiry = null; // pending deletion of an empty room (see Lobby.leave)
+    this.loop = loop;
+    this.start();
+  }
+
+  /** Start the fixed-step loop (not for rooms made with loop: false). */
+  start() {
+    if (!this.loop || this.timer) return;
+    this.acc = 0;
+    this.last = performance.now();
+    this.timer = setInterval(() => this.run(), TICK_MS);
+    this.timer.unref();
   }
 
   get full() {
