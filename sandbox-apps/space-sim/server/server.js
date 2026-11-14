@@ -191,6 +191,7 @@ export class Lobby {
    * old socket closes while the new one joins) can come back to it.
    */
   leave(client) {
+    if (this.closed) return;
     const room = client.room;
     if (!room) return;
     room.remove(client);
@@ -204,6 +205,7 @@ export class Lobby {
     };
     if (this.graceMs <= 0) drop();
     else {
+      room.emptyAt = performance.now();
       room.expiry = setTimeout(drop, this.graceMs);
       room.expiry.unref();
     }
