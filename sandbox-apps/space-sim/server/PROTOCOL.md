@@ -51,7 +51,9 @@ with `positionsAt(snap.time)` from `js/physics.js`.
 - `create`/`join` are only valid while the connection is not in a room (a
   second one answers `already in a room`). A failed `join` (bad code, unknown
   room, full room) may be retried, but the 5th failed `join` on one connection
-  closes it with code 1008, so room codes cannot be guessed by brute force.
+  closes it with code 1008. This only slows guessing down: the count is per
+  connection, so a client can reconnect and try again. Room codes are not
+  secrets.
 
 ## Server to client
 
