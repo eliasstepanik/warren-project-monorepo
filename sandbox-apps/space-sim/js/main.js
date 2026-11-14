@@ -89,6 +89,29 @@ export function start(canvas) {
   canvas.addEventListener('blur', () => setFocused(false));
   canvas.addEventListener('mousedown', () => canvas.focus());
 
+  // Display modes: browser fullscreen (F / F11) and immersive (B), where the
+  // game fills the whole viewport. A short message confirms each change.
+  function showToast(text) {
+    ui.toast = { text, until: performance.now() + TOAST_MS };
+  }
+  function toggleFullscreen() {
+    if (!document.fullscreenEnabled) return;
+    const p = document.fullscreenElement
+      ? document.exitFullscreen()
+      : document.documentElement.requestFullscreen();
+    p.catch(() => {}); // refused by the browser: stay as we are
+  }
+  function toggleImmersive() {
+    const on = document.body.classList.toggle('immersive');
+    resize();
+    showToast(on ? 'IMMERSIVE' : 'NORMAL');
+  }
+  // Also fires when the user leaves fullscreen with Esc.
+  document.addEventListener('fullscreenchange', () => {
+    resize();
+    showToast(document.fullscreenElement ? 'FULLSCREEN' : 'NORMAL');
+  });
+
   canvas.addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const k = e.key.toLowerCase();
