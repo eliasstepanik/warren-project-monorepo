@@ -62,6 +62,6 @@ over a very long time the orbit drifts.
 Needs Node 22 or newer. There are no packages to install.
 
 ```sh
-for f in js/*.js test/*.js; do node --check "$f" || exit 1; done   # syntax check
-node --test            # physics and render sanity tests
+for f in js/*.js server/*.js test/*.js; do node --check "$f" || exit 1; done   # syntax check
+node --test            # physics, render, combat sim, websocket and server tests
 ```
