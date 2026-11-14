@@ -78,8 +78,8 @@ test('energy-like stability at max warp: no NaN, orbit bounded', () => {
     assert.ok(Number.isFinite(sim.ship.x) && Number.isFinite(sim.ship.vx));
     if (sim.crash) break;
   }
-  assert.ok(!sim.crash, 'starting orbit should survive a minute at 64x');
-  assert.ok(relative(sim.ship, HOME, sim.t) < 60);
+  assert.ok(!sim.crash, 'starting orbit should survive 15 s at 64x');
+  assert.ok(relative(sim.ship, HOME, sim.t) < 40);
 });
 
 test('flying into a planet crashes; reset restores a live ship', () => {
