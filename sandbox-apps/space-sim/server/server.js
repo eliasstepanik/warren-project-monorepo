@@ -318,15 +318,16 @@ export function createGameServer({
 
   function refuse(socket, line) {
     socket.end(`HTTP/1.1 ${line}\r\nConnection: close\r\nContent-Length: 0\r\n\r\n`);
+    setTimeout(() => socket.destroy(), 1000).unref();
   }
 
   server.on('upgrade', (req, socket, head) => {
+    // Node removes its own error handling from the socket on 'upgrade'; without
+    // a listener a peer reset (ECONNRESET) would be an uncaught exception.
+    socket.on('error', () => socket.destroy());
     try {
       const url = new URL(req.url, 'http://localhost');
-      if (url.pathname !== '/ws') {
-        socket.end('HTTP/1.1 404 Not Found\r\nConnection: close\r\nContent-Length: 0\r\n\r\n');
-        return;
-      }
+      if (url.pathname !== '/ws') return refuse(socket, '404 Not Found');
       const ip = socket.remoteAddress ?? '';
       if (clients.size >= maxConnections) return refuse(socket, '503 Service Unavailable');
       if (maxPerIp > 0 && (perIp.get(ip) ?? 0) >= maxPerIp) return refuse(socket, '429 Too Many Requests');
