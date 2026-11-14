@@ -196,7 +196,14 @@ export function stepState(s, t, h, thrust = 0, cache = null) {
     cache.ax = A1.x;
     cache.ay = A1.y;
   }
-  return segmentCollision(x0, y0, s.x, s.y, P1);
+  const hit = segmentCollision(x0, y0, s.x, s.y, pos0, P1);
+  if (cache) {
+    for (let i = 0; i < P1.length; i++) {
+      cache.pos[i].x = P1[i].x;
+      cache.pos[i].y = P1[i].y;
+    }
+  }
+  return hit;
 }
 
 const V0 = makePositions();
