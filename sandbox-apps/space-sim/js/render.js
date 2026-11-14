@@ -132,19 +132,54 @@ function drawShip(ctx, sim, cam) {
   plot(2, 0, 'red');
 }
 
+/**
+ * Dotted 1px Bresenham line from (x0, y0) to (x1, y1). `dash.n` counts pixels
+ * along the whole path so the dot spacing is the same at every warp.
+ */
+function dotLine(ctx, x0, y0, x1, y1, dash) {
+  let x = Math.round(x0);
+  let y = Math.round(y0);
+  const xe = Math.round(x1);
+  const ye = Math.round(y1);
+  const dx = Math.abs(xe - x);
+  const dy = -Math.abs(ye - y);
+  const sx = x < xe ? 1 : -1;
+  const sy = y < ye ? 1 : -1;
+  let err = dx + dy;
+  for (;;) {
+    if (dash.n++ % 3 === 0 && x >= 0 && x < W && y >= 0 && y < H) ctx.fillRect(x, y, 1, 1);
+    if (x === xe && y === ye) break;
+    const e2 = 2 * err;
+    if (e2 >= dy) { err += dy; x += sx; }
+    if (e2 <= dx) { err += dx; y += sy; }
+  }
+}
+
 function drawPrediction(ctx, sim, cam) {
   const p = sim.prediction;
   if (!p) return;
-  for (let k = 0; k < p.n; k += 3) {
-    const [sx, sy] = toScreen(cam, p.pts[k * 2], p.pts[k * 2 + 1]);
-    if (sx < 0 || sx >= W || sy < 0 || sy >= H) continue;
-    px(ctx, sx, sy, p.hit >= 0 ? 'pink' : 'green');
+  // The path is relative to the reference body; it may be a few frames old, so
+  // re-anchor it on the body's current position.
+  const ref = sim.pos[p.ref];
+  const ox = ref.x - p.rx;
+  const oy = ref.y - p.ry;
+  ctx.fillStyle = PAL[p.hit >= 0 ? 'pink' : 'green'];
+  const dash = { n: 0 };
+  let [ax, ay] = toScreen(cam, sim.ship.x, sim.ship.y);
+  let lx = 0;
+  let ly = 0;
+  for (let k = 0; k < p.n; k++) {
+    [lx, ly] = toScreen(cam, p.pts[k * 2] + ox, p.pts[k * 2 + 1] + oy);
+    const offscreen = (ax < 0 && lx < 0) || (ax >= W && lx >= W) || (ay < 0 && ly < 0) || (ay >= H && ly >= H);
+    if (offscreen) dash.n += Math.round(Math.max(Math.abs(lx - ax), Math.abs(ly - ay)));
+    else dotLine(ctx, ax, ay, lx, ly, dash);
+    ax = lx;
+    ay = ly;
   }
   if (p.hit >= 0 && p.n > 0) {
-    const [sx, sy] = toScreen(cam, p.pts[(p.n - 1) * 2], p.pts[(p.n - 1) * 2 + 1]);
     ctx.fillStyle = PAL.red;
-    ctx.fillRect(Math.round(sx) - 1, Math.round(sy) - 1, 3, 1);
-    ctx.fillRect(Math.round(sx), Math.round(sy) - 2, 1, 3);
+    ctx.fillRect(Math.round(lx) - 1, Math.round(ly), 3, 1);
+    ctx.fillRect(Math.round(lx), Math.round(ly) - 1, 1, 3);
   }
 }
 
@@ -192,7 +227,7 @@ function drawHud(ctx, sim, ui) {
   }
   if (sim.crash) {
     const m = 'SHIP DESTROYED';
-    const m2 = 'PRESS R TO RESET';
+    const m2 = 'CRASHED - R TO RESET';
     const blink = Math.floor(performance.now() / 500) % 2 === 0;
     drawText(ctx, m, Math.round((W - textWidth(m, 2)) / 2), 60, PAL.red, 2);
     if (blink) drawText(ctx, m2, Math.round((W - textWidth(m2)) / 2), 76, PAL.white);

@@ -2,7 +2,7 @@
 // same code runs in the browser and in the headless physics test.
 import {
   BODIES, HOME, STEP, THRUST, RETRO, TURN_RATE,
-  makePositions, positionsAt, stepState, circularOrbit, predict,
+  makePositions, positionsAt, stepState, makeStepCache, circularOrbit, predict,
   dominantBody, bodyVelocity,
 } from './physics.js';
 
@@ -11,10 +11,12 @@ export const ZOOMS = [0.125, 0.18, 0.25, 0.35, 0.5, 0.7, 1, 1.4, 2, 3];
 export const START_ZOOM = 6; // index into ZOOMS (1x)
 const START_RADIUS = 22;
 const MAX_STEPS_PER_UPDATE = 512;
+const PREDICT_EVERY = 4; // frames between prediction refreshes while coasting
 
 export class Sim {
   constructor() {
     this.pos = makePositions();
+    this.stepCache = makeStepCache();
     this.reset();
   }
 
@@ -29,6 +31,8 @@ export class Sim {
     this.noThrustAtWarp = false;
     this.ship = circularOrbit(HOME, START_RADIUS, 0, -Math.PI / 2);
     this.prediction = null;
+    this.predWarp = 0;
+    this.predAge = 0;
     positionsAt(this.t, this.pos);
     this.refreshPrediction();
   }
@@ -54,6 +58,8 @@ export class Sim {
   }
 
   refreshPrediction() {
+    this.predAge = 0;
+    this.predWarp = this.warp;
     if (this.crash) {
       this.prediction = null;
       return;
@@ -88,7 +94,7 @@ export class Sim {
     const thrust = this.thrusting > 0 ? THRUST : this.thrusting < 0 ? -RETRO : 0;
     for (; n > 0; n--) {
       if (!this.crash) {
-        const hit = stepState(ship, this.t, STEP, thrust);
+        const hit = stepState(ship, this.t, STEP, thrust, this.stepCache);
         this.t += STEP;
         if (hit >= 0) {
           positionsAt(this.t, this.pos);
@@ -100,7 +106,12 @@ export class Sim {
     }
     positionsAt(this.t, this.pos);
     this.updateParticles(dt);
-    this.refreshPrediction();
+    // While coasting the path barely changes, so refresh it every few frames.
+    // Thrust, a warp change or a crash refreshes it immediately.
+    if (this.thrusting !== 0 || this.crash || this.warp !== this.predWarp
+      || ++this.predAge >= PREDICT_EVERY) {
+      this.refreshPrediction();
+    }
   }
 
   explode(body) {
@@ -137,6 +148,10 @@ export class Sim {
 
   /** Dominant body index and ship state relative to it, for the HUD. */
   telemetry() {
+    if (this.crash) {
+      const body = this.crash.body;
+      return { body, name: BODIES[body].name, speed: 0, altitude: 0 };
+    }
     const s = this.ship;
     const i = dominantBody(s.x, s.y, this.pos);
     const bv = bodyVelocity(i, this.t);
