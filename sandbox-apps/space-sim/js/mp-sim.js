@@ -131,19 +131,18 @@ export class MpSim {
     ship.cache = makeStepCache();
   }
 
-  kill(ship, events, cause) {
+  kill(ship, events, event) {
     ship.alive = false;
     ship.respawn = RESPAWN_TICKS;
     ship.invuln = 0;
     ship.deaths++;
-    return Object.assign(cause, { time: round(this.t + STEP, 1000) }) && events.push(cause);
+    events.push(event);
   }
 
   /** Advance one fixed step. Returns the events (kill, crash, respawn) it produced. */
   step() {
     const events = [];
-    const tick = this.tick;
-    const t = tick * STEP;
+    const t = this.time; // the same float the step cache stored as t + STEP last step
 
     for (const ship of this.ships.values()) {
       if (!ship.alive) continue;
