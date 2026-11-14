@@ -1,6 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { acceptKey, encodeFrame, decodeFrame, OP, WsError, MAX_MESSAGE } from '../server/ws.js';
+import { EventEmitter } from 'node:events';
+import {
+  acceptKey, encodeFrame, decodeFrame, OP, WsError, WsConnection, MAX_MESSAGE, MAX_FRAGMENTS, MAX_BUFFERED,
+} from '../server/ws.js';
 
 test('accept key matches the RFC 6455 example', () => {
   assert.equal(acceptKey('dGhlIHNhbXBsZSBub25jZQ=='), 's3pPLMBiTxaQ9kYGzzhZRbK+xOo=');
@@ -61,4 +64,81 @@ test('decodeFrame rejects oversized and malformed frames', () => {
   assert.throws(() => decodeFrame(encodeFrame(OP.PING, 'a'.repeat(126), { mask: true })), (e) => e.code === 1002);
   // exactly the limit is fine
   assert.equal(decodeFrame(encodeFrame(OP.TEXT, 'z'.repeat(MAX_MESSAGE), { mask: true })).payload.length, MAX_MESSAGE);
+});
+
+/** A socket stand-in that records what is written to it. */
+function fakeSocket() {
+  const s = new EventEmitter();
+  s.written = [];
+  s.writableLength = 0;
+  s.destroyed = false;
+  s.setNoDelay = () => {};
+  s.write = (b) => { s.written.push(b); return true; };
+  s.end = () => {};
+  s.destroy = () => { s.destroyed = true; s.emit('close'); };
+  return s;
+}
+
+const feed = (conn, opcode, payload = '', opts = {}) => conn.onData(encodeFrame(opcode, payload, { mask: true, ...opts }));
+const closeCodeOf = (s) => {
+  const f = s.written.map((b) => decodeFrame(b)).find((x) => x.opcode === OP.CLOSE);
+  return f && f.payload.readUInt16BE(0);
+};
+
+test('endless empty continuation frames are refused with 1009', () => {
+  const s = fakeSocket();
+  const conn = new WsConnection(s);
+  feed(conn, OP.TEXT, '', { fin: false });
+  for (let i = 0; i < MAX_FRAGMENTS - 1; i++) feed(conn, OP.CONT, '', { fin: false });
+  assert.equal(closeCodeOf(s), undefined, 'at the limit the message is still open');
+  feed(conn, OP.CONT, '', { fin: false });
+  assert.equal(closeCodeOf(s), 1009);
+  assert.equal(conn.frag?.chunks.length ?? 0 <= MAX_FRAGMENTS, true);
+});
+
+test('a message split into a few frames is reassembled', () => {
+  const s = fakeSocket();
+  const conn = new WsConnection(s);
+  const got = [];
+  conn.on('message', (m) => got.push(m));
+  feed(conn, OP.TEXT, 'ab', { fin: false });
+  feed(conn, OP.CONT, 'cd', { fin: false });
+  feed(conn, OP.CONT, 'ef');
+  assert.deepEqual(got, ['abcdef']);
+});
+
+test('close frames: valid codes are echoed, bad ones get 1002', () => {
+  const body = (code) => { const b = Buffer.alloc(2); b.writeUInt16BE(code); return b; };
+  const reply = (payload) => {
+    const s = fakeSocket();
+    feed(new WsConnection(s), OP.CLOSE, payload);
+    return closeCodeOf(s);
+  };
+  assert.equal(reply(Buffer.alloc(0)), 1000);
+  for (const code of [1000, 1001, 1003, 1007, 1011, 3000, 4999]) assert.equal(reply(body(code)), code, String(code));
+  for (const code of [0, 999, 1004, 1005, 1006, 1015, 1016, 2999, 5000]) assert.equal(reply(body(code)), 1002, String(code));
+  assert.equal(reply(Buffer.from([0x03])), 1002, 'one-byte payload');
+});
+
+test('a peer that stops reading is terminated by send, ping and the pong reply', () => {
+  for (const act of [(c) => c.send('x'), (c) => c.ping(), (c) => feed(c, OP.PING, 'p')]) {
+    const s = fakeSocket();
+    const conn = new WsConnection(s);
+    act(conn);
+    assert.equal(s.destroyed, false, 'nothing queued: fine');
+    s.writableLength = MAX_BUFFERED + 1;
+    act(conn);
+    assert.equal(s.destroyed, true);
+    assert.equal(conn.send('y'), false);
+  }
+});
+
+test('the socket ending terminates the connection', () => {
+  const s = fakeSocket();
+  const conn = new WsConnection(s);
+  let closed = 0;
+  conn.on('close', () => closed++);
+  s.emit('end');
+  assert.equal(s.destroyed, true);
+  assert.equal(closed, 1);
 });
