@@ -95,7 +95,13 @@ export function start(canvas) {
     else if (ZOOM_IN.has(k)) sim.changeZoom(1);
     else if (ZOOM_OUT.has(k)) sim.changeZoom(-1);
     else if (k === 'r') sim.reset();
-    else if (k === 'p') ui.paused = !ui.paused;
+    else if (k === 'p') {
+      ui.paused = !ui.paused;
+      if (ui.paused) { // the frozen frame must not keep a flame or the warp message
+        sim.thrusting = 0;
+        sim.noThrustAtWarp = false;
+      }
+    }
   });
   canvas.addEventListener('keyup', (e) => {
     keys.delete(e.code);
