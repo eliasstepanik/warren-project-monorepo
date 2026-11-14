@@ -286,7 +286,7 @@ export function createGameServer({ root = ROOT, idleMs = IDLE_MS, loop = true } 
 
   const sweep = setInterval(() => {
     const now = Date.now();
-    for (const { conn } of clients) if (now - conn.lastActivity > idleMs) conn.close(1001, 'timeout');
+    for (const conn of clients) if (now - conn.lastActivity > idleMs) conn.close(1001, 'timeout');
   }, Math.min(1000, Math.max(10, idleMs / 4)));
   sweep.unref();
 
