@@ -130,6 +130,31 @@ h2 {
    Content-box sizing keeps the drawing area exactly 16:9 (width minus the two 4px borders). */
 #game.fluid { box-sizing: content-box; width: calc(100% - 8px); height: auto; max-width: 100%; aspect-ratio: auto; }
 
+/* Immersive mode (B key): only the game, filling the whole viewport. */
+body.immersive { overflow: hidden; }
+body.immersive #bg,
+body.immersive .hero,
+body.immersive .footer,
+body.immersive main > .section:not(#demo),
+body.immersive #demo > :not(.screen) { display: none; }
+body.immersive main { max-width: none; margin: 0; padding: 0; }
+body.immersive #demo { margin: 0; }
+body.immersive .screen {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  background: var(--night);
+}
+
 .cards {
   list-style: none;
   margin: 0;
