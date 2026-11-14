@@ -104,10 +104,11 @@ const utf8 = new TextDecoder('utf-8', { fatal: true });
  * `lastActivity` is the time (ms) of the last frame received.
  */
 export class WsConnection extends EventEmitter {
-  constructor(socket, head = Buffer.alloc(0), { maxMessage = MAX_MESSAGE } = {}) {
+  constructor(socket, head = Buffer.alloc(0), { maxMessage = MAX_MESSAGE, maxBuffered = MAX_BUFFERED } = {}) {
     super();
     this.socket = socket;
     this.maxMessage = maxMessage;
+    this.maxBuffered = maxBuffered;
     this.buf = head;
     this.frag = null; // { chunks, size } of a fragmented text message
     this.closeSent = false;
