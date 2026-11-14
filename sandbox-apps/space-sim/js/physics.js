@@ -28,6 +28,8 @@ export const HOME = 2; // the planet the ship starts around
 export const BODIES = DEFS.map((d) => ({
   ...d,
   n: d.parent >= 0 ? Math.sqrt(DEFS[d.parent].gm / (d.a * d.a * d.a)) : 0, // mean motion
+  cw: Math.cos(d.w),
+  sw: Math.sin(d.w),
 }));
 
 const TWO_PI = Math.PI * 2;
@@ -37,7 +39,9 @@ export function solveKepler(M, e) {
   M = ((M % TWO_PI) + TWO_PI) % TWO_PI;
   let E = e < 0.8 ? M : Math.PI;
   for (let i = 0; i < 8; i++) {
-    E -= (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
+    const d = (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
+    E -= d;
+    if (Math.abs(d) < 1e-12) break;
   }
   return E;
 }
@@ -47,10 +51,8 @@ export function orbitRel(i, E, out = { x: 0, y: 0 }) {
   const b = BODIES[i];
   const px = b.a * (Math.cos(E) - b.e);
   const py = b.a * Math.sqrt(1 - b.e * b.e) * Math.sin(E);
-  const c = Math.cos(b.w);
-  const s = Math.sin(b.w);
-  out.x = px * c - py * s;
-  out.y = px * s + py * c;
+  out.x = px * b.cw - py * b.sw;
+  out.y = px * b.sw + py * b.cw;
   return out;
 }
 
@@ -120,18 +122,32 @@ export function dominantBody(x, y, pos) {
   return best;
 }
 
-/** Body with the smallest surface distance to (x, y). */
-export function nearestBody(x, y, pos) {
-  let best = 0;
-  let bestD = Infinity;
+/**
+ * Index of the first body whose disc the segment (x0, y0)-(x1, y1) touches, or
+ * -1. Testing the whole segment, not just its end, keeps fast ships from
+ * tunnelling through small bodies such as MOTE.
+ */
+export function segmentCollision(x0, y0, x1, y1, pos) {
+  const sx = x1 - x0;
+  const sy = y1 - y0;
+  const len2 = sx * sx + sy * sy;
   for (let i = 0; i < BODIES.length; i++) {
-    const d = Math.hypot(pos[i].x - x, pos[i].y - y) - BODIES[i].radius;
-    if (d < bestD) {
-      bestD = d;
-      best = i;
-    }
+    const dx = pos[i].x - x0;
+    const dy = pos[i].y - y0;
+    const u = len2 > 0 ? Math.max(0, Math.min(1, (dx * sx + dy * sy) / len2)) : 0;
+    const cx = dx - u * sx;
+    const cy = dy - u * sy;
+    if (cx * cx + cy * cy < BODIES[i].radius * BODIES[i].radius) return i;
   }
-  return best;
+  return -1;
+}
+
+/**
+ * Cache of the gravitational acceleration at the end of the last step. The next
+ * step starts exactly there, so it can skip one positionsAt + gravityAt.
+ */
+export function makeStepCache() {
+  return { t: NaN, x: NaN, y: NaN, ax: 0, ay: 0 };
 }
 
 const P0 = makePositions();
@@ -142,11 +158,21 @@ const A1 = { x: 0, y: 0 };
 /**
  * Advance ship state `s` ({x, y, vx, vy, angle}) from time t by h with velocity
  * Verlet. `thrust` is the engine acceleration along the ship's heading (may be
- * negative). Returns the index of a body hit during the step, or -1.
+ * negative). Pass the same `cache` (from makeStepCache) to consecutive steps to
+ * reuse the end-of-step acceleration; it is only used if the ship is exactly
+ * where the previous step left it. Returns the index of a body hit anywhere
+ * along the step (checked against the bodies' positions at t + h), or -1.
  */
-export function stepState(s, t, h, thrust = 0) {
-  positionsAt(t, P0);
-  gravityAt(s.x, s.y, P0, A0);
+export function stepState(s, t, h, thrust = 0, cache = null) {
+  const x0 = s.x;
+  const y0 = s.y;
+  if (cache && cache.t === t && cache.x === x0 && cache.y === y0) {
+    A0.x = cache.ax;
+    A0.y = cache.ay;
+  } else {
+    positionsAt(t, P0);
+    gravityAt(x0, y0, P0, A0);
+  }
   const tx = Math.cos(s.angle) * thrust;
   const ty = Math.sin(s.angle) * thrust;
   const ax = A0.x + tx;
@@ -157,16 +183,26 @@ export function stepState(s, t, h, thrust = 0) {
   gravityAt(s.x, s.y, P1, A1);
   s.vx += 0.5 * (ax + A1.x + tx) * h;
   s.vy += 0.5 * (ay + A1.y + ty) * h;
-  return collisionAt(s.x, s.y, P1);
+  if (cache) {
+    cache.t = t + h;
+    cache.x = s.x;
+    cache.y = s.y;
+    cache.ax = A1.x;
+    cache.ay = A1.y;
+  }
+  return segmentCollision(x0, y0, s.x, s.y, P1);
 }
 
-/** Velocity of body `i` at time t (finite difference of the rails). */
+const V0 = makePositions();
+const V1 = makePositions();
+
+/** Velocity of body `i` at time t (central difference of the rails). */
 export function bodyVelocity(i, t, out = { x: 0, y: 0 }) {
-  const e = 0.01;
-  positionsAt(t, P0);
-  positionsAt(t + e, P1);
-  out.x = (P1[i].x - P0[i].x) / e;
-  out.y = (P1[i].y - P0[i].y) / e;
+  const e = 0.005;
+  positionsAt(t - e, V0);
+  positionsAt(t + e, V1);
+  out.x = (V1[i].x - V0[i].x) / (2 * e);
+  out.y = (V1[i].y - V0[i].y) / (2 * e);
   return out;
 }
 
@@ -197,7 +233,10 @@ const Q = makePositions();
  * sub-steps of at most `hMax`. Moving bodies are evaluated at each future
  * time. Points are expressed relative to the body that dominates gravity at
  * the start, so an orbit around a moving planet draws as a closed curve.
- * Returns { pts: Float32Array(x,y pairs), n, hit, ref, end }.
+ * Point k is the state at time t + (k + 1) * dt. The path is only valid while
+ * coasting. Collisions are tested along every sub-step segment.
+ * Returns { pts: Float32Array(x,y pairs), n, hit, ref, end, t0, dt, rx, ry }
+ * where (rx, ry) is the reference body's position at t0.
  */
 export function predict(ship, t, steps = 400, dt = 0.1, hMax = 0.05) {
   const s = { x: ship.x, y: ship.y, vx: ship.vx, vy: ship.vy, angle: 0 };
@@ -208,16 +247,19 @@ export function predict(ship, t, steps = 400, dt = 0.1, hMax = 0.05) {
   const ry = Q[ref].y;
   const sub = Math.ceil(dt / hMax - 1e-9);
   const h = dt / sub;
+  const cache = makeStepCache();
   let hit = -1;
   let n = 0;
+  let tt = t;
   for (let k = 0; k < steps && hit < 0; k++) {
     for (let j = 0; j < sub && hit < 0; j++) {
-      hit = stepState(s, t + (k * sub + j) * h, h, 0);
+      hit = stepState(s, tt, h, 0, cache);
+      tt += h;
     }
     positionsAt(t + (k + 1) * dt, Q);
     pts[n * 2] = s.x - Q[ref].x + rx;
     pts[n * 2 + 1] = s.y - Q[ref].y + ry;
     n++;
   }
-  return { pts, n, hit, ref, end: s };
+  return { pts, n, hit, ref, end: s, t0: t, dt, rx, ry };
 }
