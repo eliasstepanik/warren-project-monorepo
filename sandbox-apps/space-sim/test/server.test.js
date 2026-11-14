@@ -205,7 +205,7 @@ function fake() {
 }
 
 test('rooms: create, join, reject the 5th player and unknown rooms, delete when empty', () => {
-  const lobby = new Lobby({ loop: false, graceMs: 0, maxJoinFails: 99 });
+  const lobby = new Lobby({ loop: false, graceMs: 0 });
   const host = fake();
   lobby.handle(host, JSON.stringify({ t: 'create', name: 'Host' }));
   const welcome = host.out.find((m) => m.t === 'welcome');
