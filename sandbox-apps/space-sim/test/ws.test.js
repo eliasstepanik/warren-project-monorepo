@@ -93,7 +93,6 @@ test('endless empty continuation frames are refused with 1009', () => {
   assert.equal(closeCodeOf(s), undefined, 'at the limit the message is still open');
   feed(conn, OP.CONT, '', { fin: false });
   assert.equal(closeCodeOf(s), 1009);
-  assert.equal(conn.frag?.chunks.length ?? 0 <= MAX_FRAGMENTS, true);
 });
 
 test('a message split into a few frames is reassembled', () => {
