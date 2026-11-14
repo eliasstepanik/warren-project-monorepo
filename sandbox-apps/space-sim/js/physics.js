@@ -147,10 +147,11 @@ export function segmentCollision(x0, y0, x1, y1, pos0, pos1 = pos0) {
 
 /**
  * Cache of the gravitational acceleration at the end of the last step. The next
- * step starts exactly there, so it can skip one positionsAt + gravityAt.
+ * step starts exactly there, so it can skip one positionsAt + gravityAt. It also
+ * keeps the body positions at that time (`pos`) for the collision test.
  */
 export function makeStepCache() {
-  return { t: NaN, x: NaN, y: NaN, ax: 0, ay: 0 };
+  return { t: NaN, x: NaN, y: NaN, ax: 0, ay: 0, pos: makePositions() };
 }
 
 const P0 = makePositions();
