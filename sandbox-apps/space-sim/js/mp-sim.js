@@ -7,7 +7,7 @@
 // N-body gravity and use the same segment collision as the single-player ship.
 import {
   BODIES, STEP, THRUST, RETRO, TURN_RATE,
-  positionsAt, stepState, makeStepCache, circularOrbit, predict,
+  stepState, makeStepCache, circularOrbit, predict,
 } from './physics.js';
 
 export const MAX_SHIPS = 4;
