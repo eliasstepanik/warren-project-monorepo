@@ -98,22 +98,49 @@ export function start(canvas) {
   function showToast(text) {
     ui.toast = { text, until: performance.now() + TOAST_MS };
   }
+  function modeToast() {
+    showToast(document.fullscreenElement ? 'FULLSCREEN'
+      : document.body.classList.contains('immersive') ? 'IMMERSIVE' : 'NORMAL');
+  }
+  // Leaving immersive collapses the fixed layout, so remember where the page was.
+  let savedScroll = 0;
+  // True when fullscreen (not the B key) turned immersive on, so leaving
+  // fullscreen turns it off again.
+  let immersiveFromFullscreen = false;
+  function setImmersive(on) {
+    if (on === document.body.classList.contains('immersive')) return;
+    if (on) savedScroll = window.scrollY;
+    document.body.classList.toggle('immersive', on);
+    resize();
+    if (!on) window.scrollTo(0, savedScroll);
+  }
   function toggleFullscreen() {
-    if (!document.fullscreenEnabled) return;
+    if (!document.fullscreenEnabled) {
+      showToast('NO FULLSCREEN');
+      return;
+    }
     const p = document.fullscreenElement
       ? document.exitFullscreen()
       : document.documentElement.requestFullscreen();
-    p.catch(() => {}); // refused by the browser: stay as we are
+    // refused by the browser: stay as we are
+    if (p) p.catch(() => showToast('NO FULLSCREEN'));
   }
   function toggleImmersive() {
-    const on = document.body.classList.toggle('immersive');
-    resize();
-    showToast(on ? 'IMMERSIVE' : 'NORMAL');
+    immersiveFromFullscreen = false; // an explicit choice now
+    setImmersive(!document.body.classList.contains('immersive'));
+    modeToast();
   }
   // Also fires when the user leaves fullscreen with Esc.
   document.addEventListener('fullscreenchange', () => {
+    if (document.fullscreenElement) {
+      immersiveFromFullscreen = !document.body.classList.contains('immersive');
+      setImmersive(true);
+    } else {
+      if (immersiveFromFullscreen) setImmersive(false);
+      immersiveFromFullscreen = false;
+    }
     resize();
-    showToast(document.fullscreenElement ? 'FULLSCREEN' : 'NORMAL');
+    modeToast();
   });
 
   canvas.addEventListener('keydown', (e) => {
