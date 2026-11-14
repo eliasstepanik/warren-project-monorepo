@@ -298,11 +298,16 @@ function serveStatic(root, req, res) {
 
 /**
  * Build (but do not start) the server. Returns { server, lobby, close }.
- * Options: root, idleMs, loop (false disables room timers, for tests).
+ * Options: root, idleMs, loop (false disables room timers, for tests),
+ * maxConnections, maxPerIp (0 = no cap), maxRooms, graceMs, maxJoinFails.
  */
-export function createGameServer({ root = ROOT, idleMs = IDLE_MS, loop = true } = {}) {
-  const lobby = new Lobby({ loop });
+export function createGameServer({
+  root = ROOT, idleMs = IDLE_MS, loop = true, maxConnections = MAX_CONNECTIONS, maxPerIp = MAX_PER_IP,
+  maxRooms = MAX_ROOMS, graceMs = ROOM_GRACE_MS, maxJoinFails = MAX_JOIN_FAILS,
+} = {}) {
+  const lobby = new Lobby({ loop, maxRooms, graceMs, maxJoinFails });
   const clients = new Set();
+  const perIp = new Map(); // remote address -> open connections
   const server = http.createServer((req, res) => {
     try {
       serveStatic(root, req, res);
@@ -311,6 +316,10 @@ export function createGameServer({ root = ROOT, idleMs = IDLE_MS, loop = true } 
     }
   });
 
+  function refuse(socket, line) {
+    socket.end(`HTTP/1.1 ${line}\r\nConnection: close\r\nContent-Length: 0\r\n\r\n`);
+  }
+
   server.on('upgrade', (req, socket, head) => {
     try {
       const url = new URL(req.url, 'http://localhost');
@@ -318,32 +327,49 @@ export function createGameServer({ root = ROOT, idleMs = IDLE_MS, loop = true } 
         socket.end('HTTP/1.1 404 Not Found\r\nConnection: close\r\nContent-Length: 0\r\n\r\n');
         return;
       }
+      const ip = socket.remoteAddress ?? '';
+      if (clients.size >= maxConnections) return refuse(socket, '503 Service Unavailable');
+      if (maxPerIp > 0 && (perIp.get(ip) ?? 0) >= maxPerIp) return refuse(socket, '429 Too Many Requests');
       const conn = acceptUpgrade(req, socket, head);
       if (!conn) return;
       const client = {
         id: -1, name: '', room: null,
         send: (obj) => conn.send(JSON.stringify(obj)),
         sendText: (text) => conn.send(text),
+        close: (code, reason) => conn.close(code, reason),
       };
       clients.add(conn);
+      perIp.set(ip, (perIp.get(ip) ?? 0) + 1);
       conn.on('message', (text) => lobby.handle(client, text));
       conn.on('close', () => {
         clients.delete(conn);
+        const n = (perIp.get(ip) ?? 1) - 1;
+        if (n > 0) perIp.set(ip, n);
+        else perIp.delete(ip);
         lobby.leave(client);
       });
     } catch {
       socket.destroy();
     }
+    return undefined;
   });
 
+  // Any received frame counts as activity (WsConnection.lastActivity). The
+  // server also pings, and browsers answer pings even from a hidden tab whose
+  // timers are throttled, so a quiet but alive client is never dropped.
   const sweep = setInterval(() => {
     const now = Date.now();
     for (const conn of clients) if (now - conn.lastActivity > idleMs) conn.close(1001, 'timeout');
   }, Math.min(1000, Math.max(10, idleMs / 4)));
   sweep.unref();
+  const pinger = setInterval(() => {
+    for (const conn of clients) conn.ping();
+  }, Math.max(10, idleMs / 3));
+  pinger.unref();
 
   function close() {
     clearInterval(sweep);
+    clearInterval(pinger);
     for (const conn of clients) conn.terminate();
     lobby.close();
     return new Promise((resolve) => {
@@ -357,6 +383,11 @@ export function createGameServer({ root = ROOT, idleMs = IDLE_MS, loop = true } 
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const port = Number(process.env.PORT) || 8080;
-  const { server } = createGameServer();
+  const env = (name, fallback) => (process.env[name] === undefined ? fallback : Number(process.env[name]));
+  const { server } = createGameServer({
+    maxConnections: env('MAX_CONNECTIONS', MAX_CONNECTIONS),
+    maxPerIp: env('MAX_PER_IP', MAX_PER_IP),
+    maxRooms: env('MAX_ROOMS', MAX_ROOMS),
+  });
   server.listen(port, () => console.log(`space-sim server on http://localhost:${port}/`));
 }
