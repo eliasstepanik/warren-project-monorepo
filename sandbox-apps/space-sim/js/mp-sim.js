@@ -197,7 +197,7 @@ export class MpSim {
     });
   }
 
-  /** Compact JSON-safe state. Body positions follow from `t` (positionsAt). */
+  /** Compact JSON-safe state. Body positions follow from `time` (physics.positionsAt). */
   snapshot() {
     const ships = [];
     for (const s of this.ships.values()) {
