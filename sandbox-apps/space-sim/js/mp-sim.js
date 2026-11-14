@@ -181,11 +181,11 @@ export class MpSim {
         if (ship.input.fire && ship.cooldown === 0) this.fire(ship);
       } else if (--ship.respawn <= 0) {
         this.spawn(ship);
-        events.push({ type: 'respawn', id: ship.id, time: round(t + STEP, 1000) });
+        events.push({ type: 'respawn', id: ship.id });
       }
     }
 
-    this.tick++;
+    this.time = t + STEP;
     return events;
   }
 
